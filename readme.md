@@ -1,4 +1,4 @@
-== Music Makers ==
+## Music Makers
 
 Creates music from text  .|‾‾.|
 
