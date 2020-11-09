@@ -10,7 +10,7 @@ You can also try out the app at: http://edide.xyz/musicmakers.app (or https://ed
 
 Use Meta/Ctrl key to open up menu.
 
-Menu can also be accessed with shortcut keys that correspond to button names. E.g. meta+P start playing the music.
+Menu can also be accessed with shortcut keys that correspond to button names. E.g. __meta + p__ starts playing the music.
 
 ### Music sheet examples
 
