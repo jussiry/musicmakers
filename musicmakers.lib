@@ -1,0 +1,4350 @@
+var MODSELF, edide = {};
+edide.set = (function (edide, set) {Object.defineProperty(this, 'module_name', {value:'set'});
+set = (...args) => new Set(args)
+set.addArr = (s, arr) => {
+  var i, len
+  for (i = 0, len = arr.length; i < len; i++) {
+    s.add(arr[i])
+  }
+}
+set.map = (s, func) => Array.from(s).map(func)
+return set;
+}).call(MODSELF={}, edide, MODSELF);
+edide.membrameSynth = (function (edide, membrameSynth) {Object.defineProperty(this, 'module_name', {value:'membrameSynth'});
+this.startNote = 'A0';
+this.init = () => {
+  var bd, compressor, distortion, gain, reverb;
+  distortion = new Tone.Distortion({
+    distortion: 0.1,
+    oversample: "4x" // none, 2x, 4x
+  });
+  reverb = new Tone.Freeverb(0.75, 1000);
+  gain = new Tone.Gain(0.5);
+  compressor = new Tone.Compressor({
+    ratio: 12,
+    threshold: -24,
+    release: 0.05,
+    attack: 0.003,
+    knee: 1
+  });
+  bd = new Tone.MembraneSynth({
+    pitchDecay: 0.05,
+    octaves: 4,
+    envelope: {
+      attack: 0.01,
+      decay: 0.74,
+      sustain: 0.71,
+      release: 0.05,
+      attackCurve: "exponential"
+    }
+  });
+  bd.chain(gain, distortion, reverb, compressor);
+  return [bd, compressor];
+};
+return membrameSynth;
+}).call(MODSELF={}, edide, MODSELF);
+edide.toneSynth = (function (edide, toneSynth) {Object.defineProperty(this, 'module_name', {value:'toneSynth'});
+this.startNote = 'C3';
+this.init = () => {
+  var ss;
+  return ss = new Tone.PolySynth(12, Tone.Synth, {
+    oscillator: {
+      type: 'sine'
+    },
+    envelope: {
+      attack: 0.005,
+      decay: 0.1,
+      sustain: 0.3,
+      release: 1
+    }
+  });
+};
+return toneSynth;
+}).call(MODSELF={}, edide, MODSELF);
+edide.instrumentConfigs = (function (edide, instrumentConfigs) {
+var configs = {
+  'bass-electric': {
+    startNote: 'C#2',
+    notes: 8, // 16
+    step: 3
+  },
+  'cello': {
+    startNote: 'C2',
+    notes: 11,
+    step: 2,
+    skipNotes: edide.set('F#2', 'C4')
+  },
+  'drum-electric': edide.membrameSynth,
+  'guitar-acoustic': {
+    startNote:  'D1',
+    notes: 26, // 36
+    step: 2,
+    skipNotes: edide.set('E4', 'F#4', 'G#4', 'A#4', 'C5', 'D5', 'E5')
+  },
+  'guitar-electric': {
+    startNote: 'F#2',
+    notes: 15, // 15
+    step: 3,
+  },
+  'piano': {
+    startNote: 'A1',
+    notes: 30, // 29
+    step: 2,
+    baseUrl: "https://tonejs.github.io/examples/audio/salamander/"
+  },
+  'synth-simple': edide.toneSynth,
+  'xylophone': {
+    startNote: 'G3',
+    notes: ['G3', 'C4', 'G4', 'C5', 'G5', 'C6', 'G6', 'C7']
+  }
+}
+for (let inst in configs) {
+  configs[inst].name = inst
+}
+return configs
+}).call(MODSELF={}, edide, MODSELF);
+edide.objectFromArray = (function (edide, objectFromArray) {
+var identity;
+identity = function(el) {
+  return el;
+};
+return (array, valFromEl, keyFromEl) => {
+  var el, i, ind, len, obj;
+  if (valFromEl == null) {
+    valFromEl = identity;
+  }
+  if (keyFromEl == null) {
+    keyFromEl = identity;
+  }
+  obj = {};
+  for (ind = i = 0, len = array.length; i < len; ind = ++i) {
+    el = array[ind];
+    obj[keyFromEl(el, ind)] = valFromEl(el, ind);
+  }
+  return obj;
+};
+}).call(MODSELF={}, edide, MODSELF);
+edide.noteFreq = (function (edide, noteFreq) {Object.defineProperty(this, 'module_name', {value:'noteFreq'});
+var a4, noteMap, notesObj;
+this.notes = [['C0', 16.35, 2109.89], ['C#0', 17.32, 1991.47], ['D0', 18.35, 1879.69], ['D#0', 19.45, 1774.20], ['E0', 20.60, 1674.62], ['F0', 21.83, 1580.63], ['F#0', 23.12, 1491.91], ['G0', 24.50, 1408.18], ['G#0', 25.96, 1329.14], ['A0', 27.50, 1254.55], ['A#0', 29.14, 1184.13], ['B0', 30.87, 1117.67], ['C1', 32.70, 1054.94], ['C#1', 34.65, 995.73], ['D1', 36.71, 939.85], ['D#1', 38.89, 887.10], ['E1', 41.20, 837.31], ['F1', 43.65, 790.31], ['F#1', 46.25, 745.96], ['G1', 49.00, 704.09], ['G#1', 51.91, 664.57], ['A1', 55.00, 627.27], ['A#1', 58.27, 592.07], ['B1', 61.74, 558.84], ['C2', 65.41, 527.47], ['C#2', 69.30, 497.87], ['D2', 73.42, 469.92], ['D#2', 77.78, 443.55], ['E2', 82.41, 418.65], ['F2', 87.31, 395.16], ['F#2', 92.50, 372.98], ['G2', 98.00, 352.04], ['G#2', 103.83, 332.29], ['A2', 110.00, 313.64], ['A#2', 116.54, 296.03], ['B2', 123.47, 279.42], ['C3', 130.81, 263.74], ['C#3', 138.59, 248.93], ['D3', 146.83, 234.96], ['D#3', 155.56, 221.77], ['E3', 164.81, 209.33], ['F3', 174.61, 197.58], ['F#3', 185.00, 186.49], ['G3', 196.00, 176.02], ['G#3', 207.65, 166.14], ['A3', 220.00, 156.82], ['A#3', 233.08, 148.02], ['B3', 246.94, 139.71], ['C4', 261.63, 131.87], ['C#4', 277.18, 124.47], ['D4', 293.66, 117.48], ['D#4', 311.13, 110.89], ['E4', 329.63, 104.66], ['F4', 349.23, 98.79], ['F#4', 369.99, 93.24], ['G4', 392.00, 88.01], ['G#4', 415.30, 83.07], ['A4', 440.00, 78.41], ['A#4', 466.16, 74.01], ['B4', 493.88, 69.85], ['C5', 523.25, 65.93], ['C#5', 554.37, 62.23], ['D5', 587.33, 58.74], ['D#5', 622.25, 55.44], ['E5', 659.25, 52.33], ['F5', 698.46, 49.39], ['F#5', 739.99, 46.62], ['G5', 783.99, 44.01], ['G#5', 830.61, 41.54], ['A5', 880.00, 39.20], ['A#5', 932.33, 37.00], ['B5', 987.77, 34.93], ['C6', 1046.50, 32.97], ['C#6', 1108.73, 31.12], ['D6', 1174.66, 29.37], ['D#6', 1244.51, 27.72], ['E6', 1318.51, 26.17], ['F6', 1396.91, 24.70], ['F#6', 1479.98, 23.31], ['G6', 1567.98, 22.00], ['G#6', 1661.22, 20.77], ['A6', 1760.00, 19.60], ['A#6', 1864.66, 18.50], ['B6', 1975.53, 17.46], ['C7', 2093.00, 16.48], ['C#7', 2217.46, 15.56], ['D7', 2349.32, 14.69], ['D#7', 2489.02, 13.86], ['E7', 2637.02, 13.08], ['F7', 2793.83, 12.35], ['F#7', 2959.96, 11.66], ['G7', 3135.96, 11.00], ['G#7', 3322.44, 10.38], ['A7', 3520.00, 9.80], ['A#7', 3729.31, 9.25], ['B7', 3951.07, 8.73], ['C8', 4186.01, 8.24], ['C#8', 4434.92, 7.78], ['D8', 4698.63, 7.34], ['D#8', 4978.03, 6.93], ['E8', 5274.04, 6.54], ['F8', 5587.65, 6.17], ['F#8', 5919.91, 5.83], ['G8', 6271.93, 5.50], ['G#8', 6644.88, 5.19], ['A8', 7040.00, 4.90], ['A#8', 7458.62, 4.63], ['B8', 7902.13, 4.37]];
+notesObj = null;
+noteMap = () => {
+  if (notesObj) {
+    return notesObj;
+  }
+  return notesObj = edide.objectFromArray(this.notes, (val, ind) => {
+    return [ind, ...val];
+  }, (key) => {
+    return key[0];
+  });
+};
+this.findNote = (name) => {
+  return noteMap()[name];
+};
+a4 = this.findNote('A4');
+this.diffToA4 = (name) => {
+  var note;
+  note = this.findNote(name);
+  return note[0] - a4[0];
+};
+this.diff = (n1, n2) => {
+  return this.findNote(n2)[0] - this.findNote(n1)[0];
+};
+return noteFreq;
+}).call(MODSELF={}, edide, MODSELF);
+edide.strRandom = (function (edide, strRandom) {
+return (limit = 20) => {
+  return (Math.random() + '').slice(2, +(limit + 1) + 1 || 9e9);
+};
+}).call(MODSELF={}, edide, MODSELF);
+edide.inEditor = (function (edide, inEditor) {Object.defineProperty(this, 'module_name', {value:'inEditor'});
+inEditor = (inEditor === true) || false
+return inEditor;
+}).call(MODSELF={}, edide, MODSELF);
+edide.global = (function (edide, mod_global) {
+return typeof global !== 'undefined' ? global : window;
+}).call(MODSELF={}, edide, MODSELF);
+edide.edideNamespace = (function (edide, edideNamespace) {
+return 'edide'
+}).call(MODSELF={}, edide, MODSELF);
+edide.edideNs = (function (edide, edideNs) {
+var base, name;
+return (base = edide.global)[name = edide.edideNamespace] != null ? base[name] : base[name] = {};
+}).call(MODSELF={}, edide, MODSELF);
+edide.editorModule = (function (edide, editorModule) {
+var editorModule;
+editorModule = edide.inEditor ? edide.edideNs : null;
+return editorModule;
+}).call(MODSELF={}, edide, MODSELF);
+edide.keep = (function (edide, keep) {Object.defineProperty(this, 'module_name', {value:'keep'});
+var keep;
+keep = (prop) => {
+  return prop;
+};
+return keep;
+}).call(MODSELF={}, edide, MODSELF);
+edide.logProd = (function (edide, logProd) {
+return (...args) => {
+  var console, ref, ref1;
+  console = (ref = (ref1 = edide.editorModule) != null ? ref1.console : void 0) != null ? ref : edide.global.console;
+  return console.log(...args);
+};
+}).call(MODSELF={}, edide, MODSELF);
+edide.onUnload = (function (edide, onUnload) {
+var ref, ref1;
+return (ref = (ref1 = edide.editorModule) != null ? ref1.unload.add : void 0) != null ? ref : () => {};
+}).call(MODSELF={}, edide, MODSELF);
+edide.var = (function (edide, mod_var) {
+var clearVar, currentReact, debugging, dependees, dependsOn, depsRequired, inInitCall, infinityCheck, initSetter, loopLimit, newVar, parent, setLinks, setters, updateVar, values;
+values = edide.keep(new Map); // #edide.keep if clearVar added again..
+setters = edide.keep(new Map); // varName => setter:func
+dependees = edide.keep(new Map); // varName => deps:
+setLinks = edide.keep(new Map); // for reactiveGraph, show setters inside reactive/setter:s
+debugging = false; //edide.editorModule?
+depsRequired = new Map; // varName : dependsOn
+inInitCall = false; // TODO use dependsOn? instead
+dependsOn = new Set(); // remove
+initSetter = (name, setter) => {
+  var debugName, err, parent, ref, val;
+  debugName = (ref = setter.type) != null ? ref : name;
+  if ((setters.get(name)) != null) {
+    throw Error(`Reactive for '${debugName}' already exists`);
+  }
+  setters.set(name, setter);
+  if (inInitCall) {
+    throw Error(`can't create reactive setter (for '${debugName}') inside reactive context`);
+  }
+  inInitCall = name;
+  dependsOn.clear(); // TODO clear => new Set
+  try {
+    val = setter(); // TODO: some day add revar and unvar as params; helps with multiple reactives to keep the separated
+  } catch (error) {
+    err = error;
+    inInitCall = false;
+    err.message = `Reactive initialization of '${debugName}' failed: ${err.message}`;
+    throw err;
+  }
+  parent = null;
+  dependsOn.forEach((depName) => {
+    var deps;
+    if ((deps = dependees.get(depName)) == null) {
+      dependees.set(depName, deps = new Set);
+    }
+    return deps.add(name);
+  });
+  inInitCall = false;
+  return val;
+};
+loopLimit = 0;
+infinityCheck = new Map; //edide.keep
+parent = null;
+updateVar = function(name, val) {
+  var ref, ref1, type;
+  if (arguments.length === 1) { //unless val?
+    val = setters.get(name)();
+    if (debugging && (type = setters.get(name).type)) {
+      edide.logProd(`running ${(setters.get(name).type)}`);
+    }
+  }
+  if (typeof name !== 'string') { // symbol ~ react function
+    return;
+  }
+  if (values.get(name) === val && typeof val !== 'object') {
+    return;
+  }
+  if (infinityCheck.get(name) > loopLimit) {
+    infinityCheck.forEach((k) => {
+      return edide.logProd(k);
+    });
+    edide.logProd(name);
+    if ((ref = edide.editorModule) != null) {
+      if (typeof ref.reactiveGraph === "function") {
+        ref.reactiveGraph();
+      }
+    }
+    throw Error("Inifinite loop in \:var dependencies");
+  }
+  if (debugging) {
+    edide.logProd(`updating ${name}`);
+  }
+  values.set(name, val);
+  if (!inInitCall) {
+    infinityCheck.set(name, (infinityCheck.get(name) || 0) + 1);
+    if ((ref1 = dependees.get(name)) != null) {
+      ref1.forEach((depName) => {
+        return updateVar(depName);
+      });
+    }
+    infinityCheck.delete(name);
+  }
+  return val;
+};
+currentReact = [];
+newVar = function(name, setter) {
+  var context, contextSet, err;
+  if (arguments.length === 1) {
+    if (typeof name === 'string') {
+      if (inInitCall) {
+        dependsOn.add(name);
+        edide.onUnload(() => {
+          return clearVar(name); // TODO make specific clear?
+        });
+      }
+      return values.get(name);
+    } else {
+      setter = name;
+      name = Symbol();
+      values.set(name, name); // for debugging (showing react/dom funcs in graph)
+      edide.onUnload(() => {
+        return clearVar(name); // TODO make specific clear?
+      });
+    }
+  }
+  if (currentReact.length) { // and debugging
+    context = currentReact[currentReact.length - 1];
+    if (!(contextSet = setLinks.get(context))) {
+      setLinks.set(context, contextSet = new Set);
+    }
+    contextSet.add(name);
+  }
+  currentReact.push(name);
+  if (values.get(name) == null) {
+    edide.onUnload(() => {
+      return clearVar(name);
+    });
+  }
+  if (typeof setter === 'function') {
+    setter = initSetter(name, setter); // setter becomes value
+  }
+  if (typeof name === 'string') {
+    try {
+      updateVar(name, setter);
+    } catch (error) {
+      err = error;
+      infinityCheck.clear();
+      throw err;
+    }
+  }
+  currentReact.pop();
+  return setter;
+};
+clearVar = (name) => {
+  var i, len, map, ref;
+  ref = [values, setters, dependees, setLinks];
+  for (i = 0, len = ref.length; i < len; i++) {
+    map = ref[i];
+    map.delete(name);
+  }
+};
+Object.assign(newVar, {dependees, values, setters, setLinks});
+return newVar;
+}).call(MODSELF={}, edide, MODSELF);
+edide.reactiveWithFilters = (function (edide, reactiveWithFilters) {
+return (initialVars = {}, filters = {}) => {
+  var handler, id, key, react, revar, todoMap, unvar, val;
+  id = edide.strRandom();
+  handler = {
+    get: (map, prop) => {
+      var ref;
+      if ((ref = edide.editorModule) != null ? ref.editor_inspector.inspectingNow : void 0) {
+        console.log('IN inspector? Find out is it possible to end up here form inside setter');
+        return edide.var.values.get(`${id}.${prop}`);
+      }
+      return edide.var(`${id}.${prop}`);
+    },
+    set: (map, prop, value) => {
+      if ((filters[prop] != null) && !filters[prop](value)) {
+        throw Error(`Illegal reactive (${prop}: ${value})`);
+      }
+      edide.var(`${id}.${prop}`, value);
+      return true; // Proxy set must return true if set is successfull; In the future use Reflect.set, which returns true automatically?
+    }
+  };
+  revar = new Proxy((todoMap = new Map), handler); // NOTE: map is not used yet
+  unvar = new Proxy(todoMap, {
+    get: (map, prop) => {
+      return edide.var.values.get(`${id}.${prop}`);
+    },
+    set: (map, prop, value) => {
+      return edide.var.values.set(`${id}.${prop}`, value);
+    }
+  });
+  for (key in initialVars) {
+    val = initialVars[key];
+    revar[key] = val;
+  }
+  react = (nameOrFunc, func) => {
+    if (func != null) {
+      func.type = nameOrFunc;
+    } else {
+      func = nameOrFunc;
+      func.type = 'react'; // for debugging
+    }
+    return edide.var(func);
+  };
+  return {
+    react,
+    revar,
+    unvar,
+    un: unvar,
+    re: revar // , dom
+  };
+};
+}).call(MODSELF={}, edide, MODSELF);
+edide.mmState = (function (edide, mmState) {Object.defineProperty(this, 'module_name', {value:'mmState'});
+var filters, instruments;
+this.defaults = {
+  playing: false,
+  recorderOn: false,
+  fullSheet: '',
+  sheet: '', // selected/play part of fullSheet
+  diffText: '',
+  note: null, // currently playing note
+  pace: 400, // -> bpm -> beatDelay
+  balance: 0,
+  blur: 0,
+  itch: 0,
+  instrumentsLoading: 0,
+  instrument: 'guitar-electric',
+  scale: 'pentatonic',
+  root: 'C3',
+  highlight: null,
+  keyboardInd: 0 // TODO --> keyboard
+};
+instruments = Object.keys(edide.instrumentConfigs);
+filters = {
+  scale: (val) => {
+    return ['pentatonic', 'minor', 'major'].includes(val);
+  },
+  instrument: (val) => {
+    return instruments.includes(val);
+  },
+  root: (val) => {
+    return edide.noteFreq.findNote(val);
+  }
+};
+this.react = null;
+this.init = (startingProps = {}) => {
+  var props;
+  if (this.react != null) {
+    return this;
+  }
+  props = Object.assign({}, this.defaults, startingProps);
+  ({react: this.react, revar: this.revar, unvar: this.unvar} = edide.reactiveWithFilters(props, filters));
+  return this;
+};
+return mmState;
+}).call(MODSELF={}, edide, MODSELF);
+edide.moduleGate = (function (edide, moduleGate) {Object.defineProperty(this, 'module_name', {value:'moduleGate'});
+if (!edide.inEditor) {
+  return this;
+}
+this.root; // module that is edited in root
+this.rootName;
+this.active; // module that is currently being edited (can be root or in window)
+this.activeName;
+this.executing;
+this.executingName;
+return moduleGate;
+}).call(MODSELF={}, edide, MODSELF);
+edide.debugIf = (function (edide, debugIf) {Object.defineProperty(this, 'module_name', {value:'debugIf'});
+var editorCm, editor_error, editor_events, editor_gutters, inspectorCode, ref, round;
+round = 0;
+({editor_events, editor_error, editorCm, editor_gutters, inspectorCode} = (ref = edide.editorModule) != null ? ref : {});
+return (test = true) => { // not sure if true default is good idea (breaks semantics)
+  var module;
+  if (!edide.inEditor) {
+    return;
+  }
+  round++;
+  module = edide.moduleGate.activeName;
+  if (test) {
+    editor_events.on('error', () => {
+      var cm, lastErrorLocation, thrownErrorLine;
+      if (lastErrorLocation = editor_error.getLocations(edide.moduleGate.activeName)[0]) {
+        thrownErrorLine = lastErrorLocation.first_line;
+        cm = editorCm.active();
+        editor_gutters.clearErrors(cm); // remove error marker
+        editor_gutters.setInspectorMarker(cm, thrownErrorLine, round);
+      }
+      return false; // only once
+    });
+    return inspectorCode.inspectorInjectionPreStr(module) + "; throw new Error('debug breakpoint')";
+  } else {
+    return '';
+  }
+};
+return debugIf;
+}).call(MODSELF={}, edide, MODSELF);
+edide.addEventListener = (function (edide, addEventListener) {
+var ael, original;
+({original} = edide.keep({
+  original: window.addEventListener // cache orig listener in case it gets overwrittein
+}));
+ael = (element, eventName, action, options, useCapture) => {
+  var remove;
+  if (options != null ? options.module_name : void 0) {
+    eval(edide.debugIf(1));
+  }
+  original.call(element, eventName, action, options, useCapture);
+  edide.onUnload(remove = () => {
+    return element.removeEventListener(eventName, action, options, useCapture);
+  });
+  return remove;
+};
+ael.original = original;
+return ael;
+}).call(MODSELF={}, edide, MODSELF);
+edide.mmStateWithStorage = (function (edide, mmStateWithStorage) {Object.defineProperty(this, 'module_name', {value:'mmStateWithStorage'});
+var previous, ref, storeProps, storeState;
+this.lsKey = 'musicmakersState';
+previous = JSON.parse((ref = localStorage.getItem(this.lsKey)) != null ? ref : '{}');
+edide.mmState.init(previous);
+storeProps = edide.set('bpm', 'distortion', 'lowpass', 'fullSheet', 'scale', 'root', 'instrument', 'keyboardInd');
+storeState = () => {
+  var state;
+  state = {};
+  edide.var.values.forEach((val, key) => {
+    if (typeof key === 'string' && (val != null ? val.length : void 0) !== 0) { // 0 check to avoid losing whole sheet (which happens easily with bugs)
+      key = key.split('.')[1];
+      if (storeProps.has(key)) {
+        return state[key] = val;
+      }
+    }
+  });
+  edide.logProd('fails to store state?', JSON.stringify(state));
+  return localStorage.setItem(this.lsKey, JSON.stringify(state));
+};
+edide.onUnload(storeState);
+edide.addEventListener(window, 'beforeunload', storeState);
+this.resetStorage = () => {
+  var key, ref1, val;
+  localStorage.removeItem(this.lsKey);
+  ref1 = edide.mmState.defaults;
+  for (key in ref1) {
+    val = ref1[key];
+    if (key !== 'fullSheet') {
+      edide.mmState.revar[key] = val;
+    }
+  }
+};
+return mmStateWithStorage;
+}).call(MODSELF={}, edide, MODSELF);
+edide.strParsesToNumber = (function (edide, strParsesToNumber) {Object.defineProperty(this, 'module_name', {value:'strParsesToNumber'});
+var strParsesToNumber;
+strParsesToNumber = (str) => {
+  return !Number.isNaN(parseInt(str));
+};
+return strParsesToNumber;
+}).call(MODSELF={}, edide, MODSELF);
+edide.qs = (function (edide, qs) {
+return (selector, el = document) => {
+  return el.querySelector(selector);
+};
+}).call(MODSELF={}, edide, MODSELF);
+edide.qsa = (function (edide, qsa) {
+return (selector, el = document) => {
+  return el.querySelectorAll(selector);
+};
+}).call(MODSELF={}, edide, MODSELF);
+edide.htmlStandardAttrs = (function (edide, htmlStandardAttrs) {
+return [
+  "accept",
+  "action",
+  "alt",
+  "async",
+  "checked",
+  "class",
+  "cols",
+  "content",
+  "controls",
+  "coords",
+  "data",
+  "defer",
+  "dir",
+  "disabled",
+  "download",
+  "draggable",
+  "height",
+  "hidden",
+  "href",
+  "icon",
+  "id",
+  "lang",
+  "list",
+  "loop",
+  "manifest",
+  "max",
+  "media",
+  "method",
+  "min",
+  "multiple",
+  "muted",
+  "name",
+  "open",
+  "pattern",
+  "placeholder",
+  "poster",
+  "preload",
+  "rel",
+  "required",
+  "role",
+  "rows",
+  "sandbox",
+  "scope",
+  "scrolling",
+  "seamless",
+  "selected",
+  "shape",
+  "size",
+  "sizes",
+  "spellcheck",
+  "src",
+  "start",
+  "step",
+  "style",
+  "target",
+  "title",
+  "type",
+  "value",
+  "width",
+  "wmode" // "span", "label",  "form",
+];
+}).call(MODSELF={}, edide, MODSELF);
+edide.htmlEventAttrs = (function (edide, htmlEventAttrs) {
+return ['onKeyDown', 'onKeyUp', 'onKeyPress', 'onBlur', 'onFocus', 'onLoad', 'onChange', 'onInput', 'onSubmit', 'onSelect', 'onPaste', 'onClick', 'onDoubleClick', 'onContextMenu', 'onMouseEnter', 'onMouseLeave', 'onMouseMove', 'onMouseOut', 'onMouseOver', 'onMouseDown', 'onMouseUp', 'onDragEnter', 'onDragExit', 'onDragLeave', 'onDragOver', 'onDrag', 'onDragEnd', 'onDragStart', 'onDrop', 'onResize', 'onScroll', 'onTouchStart', 'onTouchMove', 'onTouchEnd'];
+}).call(MODSELF={}, edide, MODSELF);
+edide.stylesUtils = (function (edide, stylesUtils) {Object.defineProperty(this, 'module_name', {value:'stylesUtils'});
+var vendors;
+this.non_pixel_props = ['font-weight', 'opacity', 'z-index', 'zoom'];
+vendors = (property_name, val) => {
+  var i, len, obj, ref, vendor;
+  obj = {};
+  ref = ['webkit', 'moz', 'ms'];
+  for (i = 0, len = ref.length; i < len; i++) {
+    vendor = ref[i];
+    obj[`-${vendor}-${property_name}`] = val;
+  }
+  obj[property_name] = val; // standard
+  return obj;
+};
+this.sizeUnit = 'px'; // in the future move to em?
+this.create_property_string = (key, value) => {
+  var val;
+  key = this.formatName(key);
+  value = this.formatValue(key, value, this.sizeUnit);
+  if (key.match(/ -v$/)) {
+    key = key.slice(0, -3);
+    return ((function() {
+      var ref, results;
+      ref = vendors(key, val);
+      results = [];
+      for (key in ref) {
+        val = ref[key];
+        results.push(`  ${key}: ${value};\n`);
+      }
+      return results;
+    })()).join('');
+  } else {
+    return `  ${key}: ${value};\n`;
+  }
+};
+this.formatName = (str) => {
+  return str.replace(/[A-Z]/g, (s) => {
+    return '-' + s.toLowerCase();
+  });
+};
+this.formatValue = (name, val, unit = 'em') => {
+  if (typeof val === 'number' && !this.non_pixel_props.includes(name)) {
+    val = val + unit;
+  }
+  return val;
+};
+return stylesUtils;
+}).call(MODSELF={}, edide, MODSELF);
+edide.stylesInline = (function (edide, stylesInline) {Object.defineProperty(this, 'module_name', {value:'stylesInline'});
+this.fromObj = (stylesObj, styleStr = '') => {
+  var addition, additions, i, key, len, ref, value;
+  if (additions = stylesObj['&']) {
+    ref = (Array.isArray(additions) ? additions : [additions]);
+    for (i = 0, len = ref.length; i < len; i++) {
+      addition = ref[i];
+      styleStr += this.fromObj(addition);
+    }
+  }
+  for (key in stylesObj) {
+    value = stylesObj[key];
+    if (key !== '&') {
+      styleStr += edide.stylesUtils.create_property_string(key, value);
+    }
+  }
+  return styleStr;
+};
+this.set = (element, stylesObj) => {
+  return element.setAttribute('style', this.fromObj(stylesObj));
+};
+this.add = (element, stylesObj) => {
+  var styleStr;
+  styleStr = element.getAttribute('style') || '';
+  return element.setAttribute('style', styleStr + this.fromObj(stylesObj));
+};
+this.addUnloading = (element, stylesObj) => {
+  this.add(element, stylesObj);
+  return edide.onUnload(() => {
+    return this.remove(element, stylesObj);
+  });
+};
+this.remove = (element, stylesObj) => {
+  var key;
+  for (key in stylesObj) {
+    element.style[key] = '';
+  }
+};
+return stylesInline;
+}).call(MODSELF={}, edide, MODSELF);
+edide.strIf = (function (edide, strIf) {
+return function(truthy, truthyStr, falsyStr) {
+  if (truthy) {
+    return truthyStr;
+  } else if (falsyStr != null) {
+    return falsyStr;
+  } else {
+    return '';
+  }
+};
+}).call(MODSELF={}, edide, MODSELF);
+edide.create_html_node = (function (edide, create_html_node) {
+var create_html_node;
+return create_html_node = function(sKey = 'div') {
+  var classes, domElName, el, idName, ref, ref1, ref2;
+  domElName = ((ref = sKey.match(/^(h[1-6]|[^ #._0123456789]+)\d?/)) != null ? ref[1] : void 0) || 'div';
+  idName = (ref1 = sKey.match(/#[^ ]+/)) != null ? ref1[0].slice(1) : void 0;
+  classes = (ref2 = sKey.match(/\.[^ #.]+/g)) != null ? ref2.map(function(cStr) {
+    return cStr.slice(1);
+  }) : void 0;
+  el = document.createElement(domElName);
+  if (idName != null) {
+    el.id = idName;
+  }
+  if (classes != null ? classes.length : void 0) {
+    el.setAttribute('class', classes.join(' '));
+  }
+  return el;
+};
+}).call(MODSELF={}, edide, MODSELF);
+edide.node_from_obj = (function (edide, node_from_obj) {
+var addListener, allAttrActions, bindEvent, defaultAttrsMap, eventAttrsMap, iterate, node_from_obj, ref, ref1, setAttribute, specialAttrsMap, stackDepth;
+addListener = (ref = (ref1 = edide.editorModule) != null ? ref1.addEventListener.original : void 0) != null ? ref : addEventListener;
+bindEvent = function(attrName, attrVal, node) {
+  var eventName;
+  eventName = attrName.toLowerCase().slice(2);
+  addListener.call(node, eventName, attrVal, false);
+  if (node.listeners == null) {
+    node.listeners = {};
+  }
+  if (node.listeners[attrName] != null) {
+    throw "Event system don't allow binding two events of same type to same node";
+  }
+  return node.listeners[eventName] = attrVal; //.bind(node)
+};
+setAttribute = function(attrName, attrVal, node) {
+  if (attrVal != null) {
+    return node.setAttribute(attrName, attrVal);
+  }
+};
+defaultAttrsMap = edide.objectFromArray(edide.htmlStandardAttrs, function() {
+  return setAttribute;
+});
+eventAttrsMap = edide.objectFromArray(edide.htmlEventAttrs, function() {
+  return bindEvent;
+});
+specialAttrsMap = {
+  raw: (attrName, attrVal, node) => {
+    return node.innerHTML = attrVal;
+  },
+  node: (attrName, attrVal, node) => {
+    return node.appendChild(attrVal);
+  },
+  text: (attrName, attrVal, node) => {
+    if (typeof attrVal === 'function') {
+      return attrVal(node, attrName); // used with reactive
+    } else {
+      return node.textContent = attrVal;
+    }
+  },
+  styles: (attrName, attrVal, node) => {
+    return edide.stylesInline.set(node, attrVal); // attrVal is object with inline styles
+  }
+};
+allAttrActions = Object.assign(defaultAttrsMap, eventAttrsMap);
+Object.assign(allAttrActions, specialAttrsMap);
+stackDepth = 0;
+iterate = function(node, val) {
+  var attrName, i, key, len, nonStandard, subVal, tag;
+  if (val == null) {
+    return node;
+  }
+  if (stackDepth > 100) {
+    stackDepth = 0;
+    node_from_obj.error = {val, node};
+    throw Error("node_from_obj stack depth > 100; endless loop?");
+  }
+  stackDepth++;
+  if (typeof val === 'function') {
+    val = val(node);
+    if (val === node) { // it's common pattern to set (and return) node in some variable
+      return;
+    }
+  }
+  if (val instanceof Array) {
+    for (i = 0, len = val.length; i < len; i++) {
+      subVal = val[i];
+      iterate(node, subVal); //, data
+    }
+  } else if (val instanceof Node) {
+    node.appendChild(val);
+  } else if (typeof val === 'object') {
+    if (val.constructor !== Object) {
+      throw Error('only basic object allowed in jsonHTML');
+    }
+    for (key in val) {
+      subVal = val[key];
+      if (allAttrActions[key] || (nonStandard = /^\w*[A-Z]/.test(key))) { // Why not /[A-Z]/ ?
+        if (node.setAttribute == null) {
+          throw new Error(`Can't set attributes ('${key}') for root list (${key})`);
+        }
+        if (nonStandard) {
+          attrName = key.replace(/[A-Z]/g, function(match, ind) {
+            return (edide.strIf(ind !== 0, '-')) + match.toLowerCase(); // TODO: drop \:str dependency; how has ifs worked before??
+          });
+          if (typeof subVal === 'function') {
+            subVal(node, attrName); // used with reactive
+          } else {
+            setAttribute(attrName, subVal, node);
+          }
+          nonStandard = null; // make sure this is re-evald when other attributes in same loop
+        } else {
+          allAttrActions[key](key, subVal, node);
+        }
+      } else if (key.match(/^me[0-9]?$/)) { // should this be dropped? (use array as parent instead)
+        iterate(node, subVal);
+      } else {
+        tag = edide.create_html_node(key);
+        iterate(tag, subVal);
+        node.appendChild(tag);
+      }
+    }
+  } else {
+    node.textContent = val;
+  }
+  stackDepth--;
+  return node;
+};
+return node_from_obj = function(tmplObj) {
+  var fragment;
+  stackDepth = 0;
+  fragment = iterate(document.createDocumentFragment(), tmplObj);
+  return fragment;
+};
+}).call(MODSELF={}, edide, MODSELF);
+edide.domNew = (function (edide, domNew) {
+return (nodeDef) => {
+  if (typeof nodeDef === 'object') {
+    return edide.node_from_obj(nodeDef).childNodes[0];
+  } else {
+    return edide.create_html_node(nodeDef);
+  }
+};
+}).call(MODSELF={}, edide, MODSELF);
+edide.domAppend = (function (edide, domAppend) {
+return (parentEl, content) => {
+  if (typeof content === 'object' && !(content instanceof Node)) {
+    content = edide.node_from_obj(content);
+  }
+  parentEl.appendChild(content);
+  return parentEl.lastChild;
+};
+}).call(MODSELF={}, edide, MODSELF);
+edide.domRemove = (function (edide, domRemove) {
+return (element) => {
+  var parentEl;
+  if (typeof element === 'string') {
+    element = edide.qs(element);
+  }
+  if ((parentEl = element != null ? element.parentElement : void 0) != null) {
+    return parentEl.removeChild(element);
+  } else {
+    return console.info("failed to remove node", element);
+  }
+};
+}).call(MODSELF={}, edide, MODSELF);
+edide.domRemoveChildren = (function (edide, domRemoveChildren) {
+return (node) => {
+  while (node.firstChild) {
+    node.removeChild(node.firstChild);
+  }
+};
+}).call(MODSELF={}, edide, MODSELF);
+edide.domReplaceChildren = (function (edide, domReplaceChildren) {
+return (node, newContent) => {
+  edide.domRemoveChildren(node);
+  return edide.domAppend(node, newContent);
+};
+}).call(MODSELF={}, edide, MODSELF);
+edide.dom = (function (edide, dom) {Object.defineProperty(this, 'module_name', {value:'dom'});
+this.addChilds = function(node, children) {
+  var child, i, len, results;
+  results = [];
+  for (i = 0, len = children.length; i < len; i++) {
+    child = children[i];
+    results.push(node.appendChild(child));
+  }
+  return results;
+};
+this.getAttr = function(node, attrName) {
+  var val;
+  val = node.attributes.getNamedItem(attrName).value;
+  if (edide.strParsesToNumber(val)) {
+    return parseFloat(val);
+  } else {
+    return val;
+  }
+};
+this.get = edide.qs;
+this.getAll = edide.qsa;
+this.fragment = document.createDocumentFragment.bind(document);
+this.fromStr = (htmLStr) => {
+  var div;
+  div = document.createElement('div');
+  div.innerHTML = htmLStr;
+  return document.createDocumentFragment(div.children[0]);
+};
+this.new = edide.domNew;
+this.append = this.addTo = this.appendTo = edide.domAppend;
+this.prepend = function(parentEl, content) {
+  if (typeof content === 'object') {
+    content = edide.node_from_obj(content);
+  }
+  return parentEl.insertBefore(content, parentEl.firstChild);
+};
+this.after = (ref, newNode) => {
+  ref.parentNode.insertBefore(edide.node_from_obj(newNode), ref.nextSibling);
+  return ref.nextSibling;
+};
+this.before = (ref, newNode) => {
+  return ref.parentNode.insertBefore(edide.node_from_obj(newNode), ref);
+};
+this.wrap = (node, tagStr) => {
+  var wrapper;
+  wrapper = edide.create_html_node(tagStr);
+  node.parentNode.insertBefore(wrapper, node);
+  wrapper.appendChild(node);
+  return wrapper;
+};
+this.remove = edide.domRemove;
+this.removeChildren = edide.domRemoveChildren;
+this.render = function(node, htmlObj) {
+  console.warn(":dom.render will deprecate");
+  this.removeChildren(node);
+  return node.appendChild(edide.node_from_obj(htmlObj));
+};
+this.replaceChildren = this.replaceChilds = edide.domReplaceChildren;
+this.replace = function(oldEl, newEl) {
+  var parentEl;
+  if (typeof newEl === 'object') {
+    newEl = edide.node_from_obj(newEl);
+  }
+  if ((parentEl = oldEl.parentElement) != null) {
+    parentEl.replaceChild(newEl, oldEl); // returns oldEl..
+  } else {
+    console.info("failed to replace node", newEl, oldEl);
+  }
+  return newEl; // don't work when newEl was object, since documentFragment will be empty
+};
+return dom;
+}).call(MODSELF={}, edide, MODSELF);
+edide.rootElement = (function (edide, rootElement) {Object.defineProperty(this, 'module_name', {value:'rootElement'});
+var updatePos;
+if (edide.inEditor) {
+  if (this.node == null) {
+    this.node = document.createElement('div');
+  }
+  this.node.id = 'right_side';
+  this.selector = '#' + this.node.id;
+} else {
+  this.selector = 'body';
+  this.node = document.querySelector(this.selector);
+  this.left = this.top = 0;
+}
+updatePos = () => {
+  if (!this.node) {
+    return;
+  }
+  return ({left: this.left, top: this.top} = this.node.getBoundingClientRect());
+};
+this.init = () => {
+  setTimeout(updatePos);
+  return this.node;
+};
+if (edide.inEditor) {
+  window.addEventListener('resize', updatePos);
+}
+return rootElement;
+}).call(MODSELF={}, edide, MODSELF);
+edide.randomId = (function (edide, randomId) {
+return function() {
+  return Math.random().toString().substr(2);
+};
+}).call(MODSELF={}, edide, MODSELF);
+edide.isModule = (function (edide, isModule) {
+return (maybeModule) => {
+  return typeof (maybeModule != null ? maybeModule.module_name : void 0) === 'string';
+};
+}).call(MODSELF={}, edide, MODSELF);
+edide.coffee_styles = (function (edide, coffee_styles) {Object.defineProperty(this, 'module_name', {value:'coffee_styles'});
+this.styleIdPostfix = '--styles';
+this.addStyles = function(el_id, rules) {
+  var cssStr, styleEl;
+  if (typeof window === "undefined" || window === null) {
+    return console.error("Trying to create StyleSheet rules on server side!");
+  }
+  if (arguments.length === 1) {
+    rules = el_id;
+    el_id = 'main';
+  }
+  el_id = el_id + this.styleIdPostfix;
+  if (typeof rules === 'function') { //then rules.call(@helpers) else rules
+    rules = rules();
+  }
+  this.stack = [];
+  cssStr = typeof rules === 'object' ? this.compile(rules) : rules;
+  styleEl = document.getElementById(el_id);
+  if (styleEl == null) {
+    styleEl = document.createElement('style');
+    styleEl.id = el_id;
+    document.head.appendChild(styleEl);
+  }
+  if (el_id === 'main_styles') {
+    styleEl.innerHTML += cssStr;
+  } else {
+    styleEl.innerHTML = cssStr;
+  }
+  return styleEl;
+};
+this.compile = function(rulesObj) { // , styleSheet
+  var childRules, childSelector, children, combineStr, cssStr, declarations, firstChar, i, j, key, len, len1, me, meRules, mixin, nested, newCSS, parentSelector, ref, ref1, selector, val, value;
+  if (this.stack.indexOf(rulesObj) !== -1 || this.stack.length === 100) {
+    console.warn('@stack', this.stack);
+    throw Error("Endless stack ccss.compile_to_str!");
+  }
+  this.stack.push(rulesObj);
+  cssStr = '';
+  for (selector in rulesObj) {
+    childRules = rulesObj[selector];
+    declarations = '';
+    nested = {};
+    if (selector.slice(0, 1) === '@') {
+      cssStr += selector + ' { \n';
+      cssStr += this.compile(childRules);
+      return cssStr + '}\n';
+    }
+    while ((childRules != null ? childRules.mixin : void 0) || (childRules != null ? childRules.me : void 0)) {
+      ({mixin, me} = childRules);
+      childRules.mixin = null;
+      childRules.me = null;
+      meRules = Object.assign({}, mixin, me);
+      for (key in meRules) {
+        val = meRules[key];
+        if (childRules[key] == null) {
+          childRules[key] = val; // mixins don't overwrite existing definitions
+        }
+      }
+    }
+    for (key in childRules) {
+      value = childRules[key];
+      if (typeof value === 'object') {
+        children = [];
+        ref = key.split(/\s*,\s*/);
+        for (i = 0, len = ref.length; i < len; i++) {
+          childSelector = ref[i];
+          ref1 = selector.split(/\s*,\s*/);
+          for (j = 0, len1 = ref1.length; j < len1; j++) {
+            parentSelector = ref1[j];
+            firstChar = childSelector.slice(0, 1);
+            combineStr = (function() {
+              switch (firstChar) {
+                case ':':
+                  return '';
+                case '&':
+                  childSelector = childSelector.slice(1);
+                  return '';
+                default:
+                  return ' ';
+              }
+            })();
+            children.push(parentSelector + combineStr + childSelector);
+          }
+        }
+        nested[children.join(',')] = value;
+      } else {
+        declarations += edide.stylesUtils.create_property_string(key, value);
+      }
+    }
+    if (declarations.length) {
+      newCSS = `${selector} {\n${declarations}}\n`;
+      try {
+        cssStr += newCSS;
+      } catch (error) {
+        console.log("failed with ", newCSS);
+        return;
+      }
+    }
+    cssStr += this.compile(nested); //, styleSheet
+  }
+  return cssStr;
+};
+return coffee_styles;
+}).call(MODSELF={}, edide, MODSELF);
+edide.styles = (function (edide, styles) {Object.defineProperty(this, 'module_name', {value:'styles'});
+this.added = edide.keep({});
+this.addScoped = function(module, stylesObj) {
+  stylesObj = {
+    [`#${module.module_name}`]: stylesObj
+  };
+  return this.add(module, stylesObj);
+};
+this.addRoot = function(stylesObj) {
+  return this.add({
+    [`${edide.rootElement.selector}`]: stylesObj
+  });
+};
+this.editorSelector = "#editor_top, #left_side, #popup-windows";
+this.addEditor = (stylesObj) => {
+  return this.add({
+    [`${this.editorSelector}`]: stylesObj
+  });
+};
+this.addProd = (stylesObj) => {
+  if (edide.inEditor) {
+    return;
+  }
+  return this.add(stylesObj);
+};
+this.add = function(modOrId, jsonCss) {
+  var id, unload;
+  if (arguments.length === 1) {
+    jsonCss = modOrId;
+    id = 's' + edide.randomId();
+  } else if (edide.isModule(modOrId)) {
+    id = modOrId.module_name;
+  } else if (typeof modOrId === 'string') {
+    id = modOrId;
+    unload = false; // !! to disable unloading, provide string ID
+  } else {
+    throw Error("invalid arguments to styles");
+  }
+  if (unload == null) {
+    unload = true;
+  }
+  this.added[id] = edide.coffee_styles.addStyles(id, jsonCss);
+  if (unload) {
+    return edide.onUnload(() => {
+      return this.remove(id);
+    });
+  }
+};
+this.isAdded = (modOrId) => {
+  if (edide.isModule(modOrId)) {
+    modOrId = modOrId.module_name;
+  }
+  return !!document.getElementById(modOrId);
+};
+this.addRoot = function(jsonCss) {
+  jsonCss = { //  > *
+    [`${(edide.inEditor ? '#right_side' : 'body')}`]: jsonCss
+  };
+  return this.add(jsonCss);
+};
+this.parseNode = function(dom_element_style_definitions) {};
+this.clear = function() { // umm, this isn't very usefull
+  var idStr, results;
+  results = [];
+  for (idStr in this.added) {
+    results.push(this.remove(idStr));
+  }
+  return results;
+};
+this.remove = (idStr) => { // idStr == parent module name
+  var i, len, ref, styleEl;
+  if (!idStr) {
+    return;
+  }
+  ref = document.querySelectorAll(`head #${idStr}${edide.coffee_styles.styleIdPostfix}`);
+  for (i = 0, len = ref.length; i < len; i++) {
+    styleEl = ref[i];
+    edide.domRemove(styleEl);
+  }
+  return delete this.added[idStr];
+};
+return styles;
+}).call(MODSELF={}, edide, MODSELF);
+edide.editor_colors = (function (edide, editor_colors) {Object.defineProperty(this, 'module_name', {value:'editor_colors'});
+this.purple = 'hsl(261, 90%, 75%)';
+this.blue = 'hsl(203, 90%, 63%)';
+this.turcose = "hsl(170, 90%, 50%)";
+this.green = "hsl(90, 75%, 50%)";
+this.green_hover = "hsl(90, 100%, 70%)";
+this.yellow = 'hsl(57, 72%, 65%)';
+this.orange = 'hsl(37, 100%, 56%)';
+this.red = 'hsl(19, 100%, 56%)';
+this.unhued_red = 'hsl(337, 100%, 56%)';
+this.gray = 'hsl(50, 11%, 55%)';
+this.white = 'hsl(0,0%,90%)';
+this.bgHue = 70;
+this.bgSaturation = 8;
+this.black = `hsl(${this.bgHue}, 8%, 12%)`;
+this.uiGreen = "hsl(130,70%,43%)"; //edide.color.hsl 130, 70, 43
+this.uiRed = "hsl(0,80%,43%)"; //edide.color.hsl 0,   80, 43
+this.uiRedDim = "hsl(0,50%,43%)"; //edide.color.hsl 0,   50, 43 # remove and use opacity instead?
+this.withOpacity = (colorName, opacity) => {
+  return 'hsla(' + this[colorName].slice(4, -1) + `, ${opacity})`;
+};
+return editor_colors;
+}).call(MODSELF={}, edide, MODSELF);
+edide.layersStyles = (function (edide, layersStyles) {Object.defineProperty(this, 'module_name', {value:'layersStyles'});
+var height, id;
+id = 'layer';
+height = () => {
+  return '100%';
+};
+this.init = (selector) => {
+  this.selector = selector;
+  return this.normal();
+};
+this.normal = () => { // don't recreate unnecessarily since \:unload would rebind it
+  if (edide.styles.added[id]) {
+    return;
+  }
+  return edide.styles.add(id, {
+    [`${this.selector}`]: {
+      fontFamily: 'Arial',
+      background: edide.editor_colors.black,
+      color: 'white',
+      width: '100%',
+      height: height(),
+      overflow: 'hidden',
+      pointerEvents: 'none',
+      '& > *': {
+        pointerEvents: 'all',
+        position: 'absolute',
+        top: '0',
+        left: '0',
+        overflowY: 'auto',
+        '&:not(canvas)': {
+          height: '100%',
+          width: '100%'
+        }
+      },
+      '& > canvas': this.canvasProps = {
+        overflowY: 'hidden',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)'
+      }
+    }
+  });
+};
+this.fullwindow = () => {
+  if (edide.styles.added[id]) {
+    return;
+  }
+  return edide.styles.add(id, {
+    [`${this.selector}`]: {
+      width: '100%',
+      height: height(),
+      overflow: 'hidden',
+      pointerEvents: 'none',
+      '& > *': {
+        pointerEvents: 'all',
+        position: 'absolute',
+        overflow: 'hidden',
+        top: '0',
+        left: '0',
+        height: '100vh',
+        width: '100vw'
+      },
+      '& > canvas': {
+        transform: 'translate(-50%, 0)'
+      }
+    }
+  });
+};
+this.scroll = () => {
+  edide.styles.remove(id);
+  edide.styles.add(id, {
+    [`${this.selector}`]: {
+      overflowY: 'scroll'
+    }
+  });
+  return edide.onUnload(this.normal);
+};
+this.none = () => {
+  edide.styles.remove(id);
+  edide.styles.add(id, {}); // add empty styles to stop adding of normal styles from layers init
+  return edide.onUnload(this.normal); // return normal styles when module unloaded:
+};
+return layersStyles;
+}).call(MODSELF={}, edide, MODSELF);
+edide.stylesBase = (function (edide, stylesBase) {Object.defineProperty(this, 'module_name', {value:'stylesBase'});
+this.def = {
+  '*': {
+    position: 'relative', // TODO: does this affect rendering speed?
+    boxSizing: 'border-box'
+  },
+  body: {
+    margin: 0
+  },
+  'h1, h2, h3, h4, h5, h6': {
+    margin: 0
+  },
+  'a, button': {
+    cursor: 'pointer'
+  }
+};
+edide.styles.add('stylesBase', this.def);
+return stylesBase;
+}).call(MODSELF={}, edide, MODSELF);
+edide.moduleName = (function (edide, moduleName) {
+return (nameOrMod) => {
+  if (typeof nameOrMod === 'string') {
+    return nameOrMod;
+  } else {
+    return nameOrMod != null ? nameOrMod.module_name : void 0;
+  }
+};
+}).call(MODSELF={}, edide, MODSELF);
+edide.computedStyle = (function (edide, computedStyle) {Object.defineProperty(this, 'module_name', {value:'computedStyle'});
+var pxVal;
+this.styles;
+this.fromElement = function(element) {
+  return this.styles = window.getComputedStyle(element);
+};
+pxVal = (propName) => {
+  return parseFloat(this.styles[propName]);
+};
+this.getHorPadding = function() {
+  return pxVal('padding-left') + pxVal('padding-right');
+};
+this.getVertPadding = function() {
+  return pxVal('padding-top') + pxVal('padding-bottom');
+};
+this.getHorMargin = function() {
+  return pxVal('margin-left') + pxVal('margin-right');
+};
+this.getVertMargin = function() {
+  return pxVal('margin-top') + pxVal('margin-bottom');
+};
+return computedStyle;
+}).call(MODSELF={}, edide, MODSELF);
+edide.aspectRatio = (function (edide, aspectRatio) {Object.defineProperty(this, 'module_name', {value:'aspectRatio'});
+this.setContainer = function(containerWidth, containerHeight) {
+  var container, paddingHor, paddingVert;
+  this.containerWidth = containerWidth;
+  this.containerHeight = containerHeight;
+  if (this.containerWidth instanceof Node) {
+    container = this.containerWidth;
+    edide.computedStyle.fromElement(container);
+    paddingHor = edide.computedStyle.getHorPadding(); // parseInt(styles['padding-left']) + parseInt(styles['padding-right'])
+    paddingVert = edide.computedStyle.getVertPadding(); // parseInt(styles['padding-top']) + parseInt(styles['padding-bottom'])
+    this.containerWidth = container.clientWidth - paddingHor;
+    this.containerHeight = container.clientHeight - paddingVert;
+  }
+  return this;
+};
+this.fitInCointainer = function(widthToHeight) {
+  if (this.containerHeight > this.containerWidth / widthToHeight) {
+    this.width = this.containerWidth;
+    this.height = this.containerWidth / widthToHeight;
+  } else {
+    this.height = this.containerHeight;
+    this.width = this.containerHeight * widthToHeight;
+  }
+  return [this.width, this.height];
+};
+return aspectRatio;
+}).call(MODSELF={}, edide, MODSELF);
+edide.layers = (function (edide, layers) {Object.defineProperty(this, 'module_name', {value:'layers'});
+var initContainer;
+this.prodStyles = function(prod = true) {
+  var ref;
+  return (ref = edide.editorModule) != null ? ref.dark_theme.init(prod) : void 0;
+};
+this.selector = '#layers';
+edide.layersStyles.init(this.selector);
+edide.stylesBase;
+initContainer = () => {
+  var ref;
+  return (ref = edide.rootElement.node.querySelector(this.selector)) != null ? ref : edide.rootElement.node.appendChild(edide.dom.new(this.selector));
+};
+this.init = () => {
+  if (this.container != null) {
+    return this;
+  }
+  this.container = initContainer();
+  this.addedLayers = new Map; // {} # TODO: change these to map's -
+  this.canvases = new Map; // {} not bound to module_name's
+  edide.onUnload(() => {
+    edide.dom.remove(this.container);
+    return this.container = null;
+  });
+  return this;
+};
+this.get = function(layerId, elementType = 'div') {
+  var node;
+  this.init();
+  if (edide.isModule(layerId)) {
+    layerId = edide.moduleName(layerId);
+  }
+  if (layerId && (node = this.addedLayers.get(layerId))) {
+    return node;
+  }
+  if (layerId == null) {
+    layerId = 'l' + edide.randomId(); // by creating new id we allow multiple renders when id not provided
+  }
+  node = document.createElement(elementType);
+  node.className = 'layer';
+  node.id = layerId;
+  this.container.appendChild(node);
+  this.addedLayers.set(layerId, node); //[layerName] = node
+  edide.onUnload(() => {
+    return this.remove(layerId);
+  });
+  return node;
+};
+this.getCanvas = (nameOrMod, widthToHeight, ctxType = '2d') => {
+  var canvasProps, el, ref;
+  if (edide.inEditor) {
+    if ((ref = edide.moduleGate.executing) != null) {
+      if (ref.recompileOnResize == null) {
+        ref.recompileOnResize = true;
+      }
+    }
+  }
+  el = this.get(nameOrMod, 'canvas');
+  if (widthToHeight != null) {
+    edide.aspectRatio.setContainer(this.container);
+    [el.width, el.height] = edide.aspectRatio.fitInCointainer(widthToHeight);
+  } else {
+    el.width = this.container.clientWidth;
+    el.height = this.container.clientHeight;
+  }
+  canvasProps = {
+    node: el,
+    ctx: el.getContext(ctxType, {
+      preserveDrawingBuffer: true
+    }),
+    width: el.width,
+    height: el.height,
+    widthToHeight: widthToHeight
+  };
+  this.canvases.set(edide.moduleName(nameOrMod), canvasProps);
+  return canvasProps;
+};
+this.has = function(layerId) {
+  return this.addedLayers.has(edide.moduleName(layerId)); //[edide.moduleName layerId]?
+};
+this.remove = (layerId) => {
+  var node;
+  layerId = layerId instanceof Element ? layerId.id : edide.moduleName(layerId);
+  if (node = this.addedLayers.get(layerId)) {
+    this.addedLayers.delete(layerId);
+    this.canvases.delete(layerId);
+    edide.dom.remove(node);
+  }
+};
+this.clear = () => {
+  return this.addedLayers.forEach((node, layerId) => {
+    return this.remove(layerId);
+  });
+};
+if (this.refresh == null) {
+  this.refresh = (runModule) => {
+    edide.aspectRatio.setContainer(this.container);
+    return this.addedLayers.forEach((node, name) => {
+      if (node.tagName === 'CANVAS') {
+        if (this.canvases.get(name).widthToHeight != null) {
+          return [node.width, node.height] = edide.aspectRatio.fitInCointainer(this.canvases.get(name).widthToHeight);
+        } else {
+          node.width = this.container.clientWidth;
+          return node.height = this.container.clientHeight;
+        }
+      }
+    });
+  };
+}
+return layers;
+}).call(MODSELF={}, edide, MODSELF);
+edide.render = (function (edide, render) {Object.defineProperty(this, 'module_name', {value:'render'});
+this.toNode = function(node, htmlObjOrNode) {
+  var newNode;
+  edide.dom.removeChildren(node);
+  newNode = htmlObjOrNode instanceof Node ? htmlObjOrNode : edide.node_from_obj(htmlObjOrNode);
+  node.appendChild(newNode);
+  return node;
+};
+this.toLayer = function(module, htmlObjOrNode) {
+  if (!htmlObjOrNode) {
+    htmlObjOrNode = module;
+    module = null;
+  }
+  return this.toNode(edide.layers.get(module), htmlObjOrNode);
+};
+this.html = (htmlStr) => {
+  edide.rootElement.node.innerHTML = htmlStr;
+  return edide.onUnload(() => {
+    edide.dom.removeChildren(edide.rootElement.node);
+    return edide.layers.init();
+  });
+};
+this.late = function(moduleOrNode, htmlObjFunc) {
+  var func;
+  func = moduleOrNode instanceof Node ? this.toNode : this.toLayer.bind(this);
+  return setTimeout(function() {
+    return func(moduleOrNode, htmlObjFunc());
+  });
+};
+return render;
+}).call(MODSELF={}, edide, MODSELF);
+edide.colorText = (function (edide, colorText) {Object.defineProperty(this, 'module_name', {value:'colorText'});
+var capsDiff, capsEnd, capsStart, charSpan, engText, finnText, hueFromCharCode, hueStep, latinChars, testText2, textToDom, uncapsEnd, uncapsStart;
+latinChars = 26;
+capsStart = 65;
+capsEnd = capsStart + latinChars - 1;
+uncapsStart = 97;
+uncapsEnd = uncapsStart + latinChars - 1;
+capsDiff = uncapsStart - capsStart;
+this.maxLatinHue = 280;
+hueStep = this.maxLatinHue / latinChars;
+hueFromCharCode = (code) => {
+  if (uncapsStart <= code && code <= uncapsEnd) {
+    code -= capsDiff;
+  }
+  if (!(capsStart <= code && code <= capsEnd)) {
+    return 300;
+  }
+  return hueStep * (code - capsStart);
+};
+this.lightFromHue = (hue) => {
+  var light;
+  light = 50;
+  if (hue < 20) {
+    return light + 20;
+  } else if (200 < hue && hue < this.maxLatinHue) {
+    return light + 30;
+  } else if (hue === 300) {
+    return 100;
+  } else {
+    return light;
+  }
+};
+this.charColor = (char) => {
+  var code, hue;
+  code = char.charCodeAt(0);
+  hue = hueFromCharCode(code);
+  if (char === 'ä' || char === 'Ä') {
+    hue = hueFromCharCode('a'.charCodeAt(0));
+  } else if (char === 'ö' || char === 'Ö') {
+    hue = hueFromCharCode('o'.charCodeAt(0));
+  }
+  return `hsl(${hue}, 100%, ${this.lightFromHue(hue)}%)`;
+};
+charSpan = (char) => {
+  var span;
+  span = document.createElement('span');
+  span.style.color = this.charColor(char);
+  span.textContent = char;
+  return span;
+};
+textToDom = (node, str) => {
+  var char, i, len;
+  for (i = 0, len = str.length; i < len; i++) {
+    char = str[i];
+    node.appendChild(charSpan(char));
+  }
+  return node;
+};
+testText2 = "Tää on pitkä teksti, missä on paljon sisältöö jo silleen.\nTai ei oikeesti. Mut kirjaimia on suht paljon. Ja sanojakin jonkin verran.\nMitäs tässä nyt sitten muuta. Katseleppa kuuta.".toUpperCase();
+finnText = "Tää on pitkä teksti, missä on paljon sisältöö jo silleen.\nTai ei oikeesti. Mut kirjaimia on suht paljon. Ja sanojakin jonkin verran.\nMitäs tässä nyt sitten muuta. Katseleppa kuuta.\nTÄÄ ON PITKÄ TEKSTI, MISSÄ ON PALJON SISÄLTÖÖ JO SILLEEN.\nTAI EI OIKEESTI. MUT KIRJAIMIA ON SUHT PALJON. JA SANOJAKIN JONKIN VERRAN.\nMITÄS TÄSSÄ NYT SITTEN MUUTA. KATSELEPPA KUUTA.\nTää on pitkä teksti, missä on paljon sisältöö jo silleen.\nTai ei oikeesti. Mut kirjaimia on suht paljon. Ja sanojakin jonkin verran.\nMitäs tässä nyt sitten muuta. Katseleppa kuuta.";
+engText = "This is some text in english to compare how different it looks\nwith finnish language. We say still few words to give it bit more length.\nAnd then in the evening the swan fly away and was never seen again.";
+this.render = () => {
+  return edide.render.toLayer(this, {
+    p2: (node) => {
+      return textToDom(node, 'ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖ.?');
+    },
+    p: (node) => {
+      return textToDom(node, finnText);
+    },
+    p4: (node) => {
+      return textToDom(node, engText);
+    },
+    p3: (node) => {
+      return textToDom(node, '1234567890 TODO');
+    }
+  });
+};
+edide.styles.addScoped(this, {
+  fontSize: '1.2em',
+  letterSpacing: 1,
+  background: 'black'
+});
+return colorText;
+}).call(MODSELF={}, edide, MODSELF);
+edide.editableStyles = (function (edide, editableStyles) {Object.defineProperty(this, 'module_name', {value:'editableStyles'});
+var char, charCode, charColor, i, len, obj, ref, ref1, ref2, ref3, ref4, rowHeight;
+rowHeight = 20;
+charColor = {};
+ref4 = (function() {
+  var results = [];
+  for (var j = ref2 = 'a'.charCodeAt(0), ref3 = 'z'.charCodeAt(0); ref2 <= ref3 ? j <= ref3 : j >= ref3; ref2 <= ref3 ? j++ : j--){ results.push(j); }
+  return results;
+}).apply(this).concat((function() {
+  var results = [];
+  for (var j = ref = '1'.charCodeAt(0), ref1 = '9'.charCodeAt(0); ref <= ref1 ? j <= ref1 : j >= ref1; ref <= ref1 ? j++ : j--){ results.push(j); }
+  return results;
+}).apply(this));
+for (i = 0, len = ref4.length; i < len; i++) {
+  charCode = ref4[i];
+  char = String.fromCharCode(charCode);
+  charColor['.c' + char] = {
+    color: edide.colorText.charColor(char)
+  };
+  charColor['.highlight.c' + char] = {
+    color: 'black',
+    background: edide.colorText.charColor(char)
+  };
+}
+edide.styles.add(obj = {
+  '#editable': {
+    '.row': {
+      height: rowHeight,
+      lineHeight: rowHeight,
+      me: charColor
+    }
+  }
+});
+return editableStyles;
+}).call(MODSELF={}, edide, MODSELF);
+edide.reactive = (function (edide, reactive) {
+return (initialVars = {}) => {
+  var handler, id, key, react, revar, todoMap, unvar, val;
+  id = edide.strRandom();
+  handler = {
+    get: (map, prop) => {
+      var ref;
+      if ((ref = edide.editorModule) != null ? ref.editor_inspector.inspectingNow : void 0) {
+        console.log('IN inspector? Find out is it possible to end up here form inside setter');
+        return edide.var.values.get(`${id}.${prop}`);
+      }
+      return edide.var(`${id}.${prop}`);
+    },
+    set: (map, prop, value) => {
+      edide.var(`${id}.${prop}`, value);
+      return true; // Proxy set must return true if set is successfull; In the future use Reflect.set, which returns true automatically?
+    }
+  };
+  revar = new Proxy((todoMap = new Map), handler); // NOTE: map is not used yet
+  unvar = new Proxy(todoMap, {
+    get: (map, prop) => {
+      return edide.var.values.get(`${id}.${prop}`);
+    },
+    set: (map, prop, value) => {
+      return edide.var.values.set(`${id}.${prop}`, value);
+    }
+  });
+  for (key in initialVars) {
+    val = initialVars[key];
+    revar[key] = val;
+  }
+  react = (nameOrFunc, func) => {
+    if (func != null) {
+      func.type = nameOrFunc; // "#{id} #{nameOrFunc}"
+    } else {
+      func = nameOrFunc;
+      func.type = 'react'; // for debugging
+    }
+    return edide.var(func);
+  };
+  return {
+    react,
+    revar,
+    unvar,
+    un: unvar,
+    re: revar // , dom
+  };
+};
+}).call(MODSELF={}, edide, MODSELF);
+edide.editableState = (function (edide, editableState) {Object.defineProperty(this, 'module_name', {value:'editableState'});
+({revar: this.revar, unvar: this.unvar, react: this.react} = edide.reactive());
+return editableState;
+}).call(MODSELF={}, edide, MODSELF);
+edide.node = (function (edide, node) {Object.defineProperty(this, 'module_name', {value:'node'});
+this.isText = (node) => {
+  return node.nodeType === Node.TEXT_NODE;
+};
+return node;
+}).call(MODSELF={}, edide, MODSELF);
+edide.editableCursor = (function (edide, editableCursor) {Object.defineProperty(this, 'module_name', {value:'editableCursor'});
+var reset, revar, selectEl;
+({revar, unvar: this.unvar} = edide.editableState);
+reset = () => {
+  this.unvar.cursorCol = 0;
+  return revar.cursorRow = 0;
+};
+reset();
+this.select = () => {
+  var cursorCol, cursorRow, rowNode, span;
+  ({cursorRow, cursorCol} = this.unvar);
+  if (!(rowNode = this.editable.children[cursorRow])) {
+    return edide.logProd('editableCursor rowNode not found');
+  }
+  if (span = rowNode.children[cursorCol]) {
+    return selectEl(span, 0);
+  } else if (span = rowNode.children[cursorCol - 1]) {
+    return selectEl(span, 1);
+  }
+};
+this.updatePos = (node) => {
+  var columnInd, focusNode, focusOffset, rowInd, start;
+  if (node != null) {
+    this.editable = node;
+  }
+  ({focusNode, focusOffset} = window.getSelection());
+  node = start = focusNode; // or anchroNode ?
+  while ((node.tagName !== 'DIV') && node.parentNode !== this.editable) {
+    node = node.parentNode;
+  }
+  rowInd = Array.from(this.editable.children).indexOf(node);
+  if (rowInd == null) {
+    return reset(); // when is here?
+  }
+  columnInd = focusOffset;
+  node = start;
+  if (edide.node.isText(node)) {
+    node = node.parentNode;
+  }
+  if (node.tagName === 'SPAN') { // can be also empty row (div)
+    while (node = node.previousSibling) {
+      columnInd += node.textContent.length;
+    }
+  }
+  this.unvar.cursorCol = columnInd;
+  return revar.cursorRow = rowInd;
+};
+selectEl = (el, ind = el.textContent.length) => { // assumes el with one char
+  var range, sel;
+  this.editable.focus();
+  range = document.createRange();
+  range.setStart(el, ind);
+  sel = window.getSelection();
+  sel.removeAllRanges();
+  return sel.addRange(range);
+};
+return editableCursor;
+}).call(MODSELF={}, edide, MODSELF);
+edide.array = (function (edide, array) {Object.defineProperty(this, 'module_name', {value:'array'});
+var flatten;
+array.toObject = function(array, val_from_el, key_from_el) {
+  var el, i, ind, len, obj;
+  console.warn(":array.toObject will deprecate, use \:object.fromArray");
+  obj = {};
+  if (key_from_el == null) {
+    key_from_el = function(el) {
+      return el;
+    };
+  }
+  for (ind = i = 0, len = array.length; i < len; ind = ++i) {
+    el = array[ind];
+    obj[key_from_el(el, ind)] = val_from_el(el, ind);
+  }
+  return obj;
+};
+array.toArray = function(arrayish) {
+  return Array.prototype.slice.call(arrayish);
+};
+array.diff = function(arrA, arrB) {
+  var diff, el, i, len, unchecked;
+  unchecked = arrB.slice(0);
+  diff = [];
+  for (i = 0, len = arrA.length; i < len; i++) {
+    el = arrA[i];
+    if (arrB.indexOf(el) !== -1) {
+      array.remove(unchecked, el);
+    } else {
+      diff.push(el);
+    }
+  }
+  return diff.concat(unchecked);
+};
+array.flatten = flatten = (arr) => {
+  return arr.reduce((function(a, b) {
+    return a.concat(Array.isArray(b) ? flatten(b) : b);
+  }), []);
+};
+array.last = array.lastOf = (arr) => {
+  return arr[arr.length - 1];
+};
+array.pushArray = (arr, arr2) => {
+  return arr.push.apply(arr, arr2);
+};
+array.remove = (arr, el) => {
+  var ind;
+  if ((ind = arr.indexOf(el)) !== -1) {
+    arr.splice(ind, 1);
+  }
+  return arr;
+};
+array.removeIf = (arr, test) => {
+  var ind;
+  ind = arr.length;
+  while (ind--) {
+    if (test(arr[ind], ind)) {
+      arr.splice(ind, 1);
+    }
+  }
+  return arr;
+};
+array.removeAll = function(arr, el) {
+  var arrEl, i, ind;
+  for (ind = i = arr.length - 1; i >= 0; ind = i += -1) {
+    arrEl = arr[ind];
+    if (arrEl === el) {
+      arr.splice(ind, 1);
+    }
+  }
+  return arr;
+};
+array.unique = function(...arrs) {
+  var arr, el, i, j, len, len1, unique;
+  unique = [];
+  for (i = 0, len = arrs.length; i < len; i++) {
+    arr = arrs[i];
+    for (j = 0, len1 = arr.length; j < len1; j++) {
+      el = arr[j];
+      if (!unique.includes(el)) {
+        unique.push(el);
+      }
+    }
+  }
+  return unique;
+};
+array.isEqual = (arr1, arr2) => {
+  var i, ind, len, val;
+  if (arr1.length !== arr2.length) {
+    return false;
+  }
+  for (ind = i = 0, len = arr1.length; i < len; ind = ++i) {
+    val = arr1[ind];
+    if (val !== arr2[ind]) {
+      return false;
+    }
+  }
+  return true;
+};
+array.count = function(arr, filterFunc) {
+  var count, e, filterEl, i, len;
+  if (typeof filterFunc !== 'function') {
+    filterEl = filterFunc;
+    filterFunc = function(e) {
+      return e === filterEl;
+    };
+  }
+  count = 0;
+  for (i = 0, len = arr.length; i < len; i++) {
+    e = arr[i];
+    (filterFunc(e) ? count++ : void 0);
+  }
+  return count;
+};
+return array;
+}).call(MODSELF={}, edide, MODSELF);
+edide.setTimeout = (function (edide, mod_setTimeout) {
+var nativeSetTimeout, ref;
+nativeSetTimeout = edide.global.nativeSetTimeout = (ref = edide.global.nativeSetTimeout) != null ? ref : edide.global.setTimeout;
+return function(arg1, arg2) {
+  var fun, id, num;
+  [fun, num] = typeof arg2 === 'function' ? [arg2, arg1] : [arg1, arg2];
+  id = nativeSetTimeout(fun, num);
+  edide.onUnload(() => {
+    return clearTimeout(id);
+  });
+  return id;
+};
+}).call(MODSELF={}, edide, MODSELF);
+edide.editableDebug = (function (edide, editableDebug) {Object.defineProperty(this, 'module_name', {value:'editableDebug'});
+this.isOn = true;
+this.render = (htmlNode) => {
+  this.htmlNode = htmlNode;
+};
+this.keypress = (editableNode) => {
+  if (!this.isOn) {
+    return;
+  }
+  return this.htmlNode.textContent = editableNode.outerHTML;
+};
+return editableDebug;
+}).call(MODSELF={}, edide, MODSELF);
+edide.keyCode = (function (edide, keyCode) {Object.defineProperty(this, 'module_name', {value:'keyCode'});
+this.backspace = 8;
+this.tab = 9;
+this.enter = 13;
+this.esc = 27;
+this.shift = 16;
+this.ctr = 17;
+this.alt = 18;
+this.left = 37;
+this.up = 38;
+this.right = 39;
+this.down = 40;
+this.del = 46; // 'delete'
+this.metaLeft = 91;
+this.metaRight = 93;
+this.altGr = 225;
+this.get = (str) => {
+  var char, i, len;
+  for (i = 0, len = str.length; i < len; i++) {
+    char = str[i];
+    this[char] = char.charCodeAt(0);
+  }
+  return this;
+};
+this.inArray = (str) => {
+  var char, i, len, results;
+  results = [];
+  for (i = 0, len = str.length; i < len; i++) {
+    char = str[i];
+    results.push(char.charCodeAt(0));
+  }
+  return results;
+};
+return keyCode;
+}).call(MODSELF={}, edide, MODSELF);
+edide.keyevent = (function (edide, keyevent) {Object.defineProperty(this, 'module_name', {value:'keyevent'});
+var alt, altGr, metaLeft, metaRight, shift;
+this.isArrow = this.isArrowKey = (ev) => {
+  return 37 <= ev.keyCode && ev.keyCode <= 40;
+};
+this.isChar = (ev) => {
+  return (65 <= ev.keyCode && ev.keyCode <= 90) || (65 + 32 <= ev.keyCode && ev.keyCode <= 90 + 32);
+};
+this.isNumber = (ev) => {
+  return 48 <= ev.keyCode && ev.keyCode <= 57;
+};
+({shift, alt, altGr, metaLeft, metaRight} = edide.keyCode);
+this.isSpecial = (ev) => {
+  return [shift, alt, altGr, metaLeft, metaRight].includes(ev.keyCode);
+};
+this.specialIsDown = (ev) => {
+  return ev.altKey || ev.ctrlKey || ev.metaKey || ev.shiftKey;
+};
+return keyevent;
+}).call(MODSELF={}, edide, MODSELF);
+edide.typeof = (function (edide, mod_typeof) {
+return function(arg) {
+  var type;
+  type = typeof arg;
+  if (type === 'object') {
+    if (arg instanceof Array || ArrayBuffer.isView(arg)) {
+      return 'array';
+    }
+    if (arg === null) {
+      return 'null';
+    }
+  }
+  return type;
+};
+}).call(MODSELF={}, edide, MODSELF);
+edide.argumentTypes = (function (edide, argumentTypes) {
+var defaultMapping;
+defaultMapping = {
+  string: 'str',
+  number: 'num',
+  object: 'obj',
+  array: 'arr',
+  boolean: 'boo', // should be bool
+  function: 'fun', // should be func
+  undefined: 'nil',
+  null: 'nil'
+};
+return function(args, typeMapping = defaultMapping, defaultValues) {
+  var arg, argTypes, current, i, key, len, ref, ref1, typeName, val;
+  argTypes = {};
+  for (i = 0, len = args.length; i < len; i++) {
+    arg = args[i];
+    typeName = (ref = (ref1 = typeMapping[edide.typeof(arg)]) != null ? ref1 : typeMapping.rest) != null ? ref : 'rest';
+    if (current = argTypes[typeName]) {
+      if (Array.isArray(current)) {
+        current.push(arg);
+      } else {
+        argTypes[typeName] = [argTypes[typeName], arg];
+      }
+    } else {
+      argTypes[typeName] = arg;
+    }
+  }
+  for (key in defaultValues) {
+    val = defaultValues[key];
+    if (argTypes[key] == null) {
+      argTypes[key] = val;
+    }
+  }
+  return argTypes;
+};
+}).call(MODSELF={}, edide, MODSELF);
+edide.assert = (function (edide, assert) {Object.defineProperty(this, 'module_name', {value:'assert'});
+var argMapping, assert;
+argMapping = {
+  function: 'testFunc',
+  string: 'errorMessage',
+  boolean: 'result',
+  object: 'debug',
+  array: 'debug'
+};
+assert = (...args) => {
+  var debug, errorMessage, result, testFunc;
+  ({result, testFunc, errorMessage, debug} = edide.argumentTypes(args, argMapping));
+  if (testFunc) {
+    result = testFunc();
+  }
+  if (!result) {
+    if (debug != null) {
+      edide.logProd('assert debug', debug);
+    }
+    throw Error(`assert failed: '${errorMessage}'`);
+  }
+};
+return assert;
+}).call(MODSELF={}, edide, MODSELF);
+edide.editable = (function (edide, editable) {Object.defineProperty(this, 'module_name', {value:'editable'});
+var checkEditable, flushInline, handlePaste, history, keyDown, keyUp, keysPressed, moveRight, pruneRootNodes, reformatRow, revar, unvar;
+moveRight = 1;
+this.editableNode = null;
+edide.editableStyles;
+({revar, unvar} = edide.editableState);
+history = [];
+keysPressed = []; // REMOVE unless actually needed
+keyDown = (ev) => {
+  if (ev.metaKey && ev.keyCode === 90) { // 'z'
+    if (history.length) {
+      this.setValue(history.pop());
+    }
+    edide.editableCursor.select();
+  } else {
+    history.push(this.getValue());
+  }
+  if (edide.array.last(keysPressed) !== ev.keyCode) { // ignore repeats
+    keysPressed.push(ev.keyCode);
+  }
+  return revar.keyDownEv = ev;
+};
+keyUp = (ev) => {
+  edide.setTimeout(() => {
+    return edide.editableDebug.keypress(this.editableNode);
+  });
+  if (edide.keyevent.isSpecial(ev)) { // cursor = null
+    return;
+  }
+  if (ev.keyCode === edide.keyCode.enter || ev.keyCode === edide.keyCode.backspace) {
+    pruneRootNodes();
+  }
+  if ((edide.keyevent.isChar(ev) || edide.keyevent.isNumber(ev)) && edide.array.last(keysPressed) === ev.keyCode) {
+    edide.editableCursor.updatePos();
+    reformatRow(unvar.cursorRow);
+    edide.editableCursor.select(); //if edide.keyevent.isArrow(ev) #or not cursor # HERE HERE HERE
+  } else {
+    edide.editableCursor.updatePos();
+  }
+  checkEditable(); // ASSERT
+  edide.array.remove(keysPressed, ev.keyCode);
+  return revar.keyCode = ev.keyCode;
+};
+handlePaste = (ev) => { // forbid multi row pastes (TODO enable them)
+  var pastedData, ref;
+  pastedData = ((ref = ev.clipboardData) != null ? ref : window.clipboardData).getData('Text');
+  if (pastedData.match(/\n/)) {
+    return ev.preventDefault(); // CANCELED for now; TODO how to handle
+  }
+  edide.editableCursor.updatePos();
+  pruneRootNodes();
+  return setTimeout(() => {
+    reformatRow(unvar.cursorRow);
+    revar.cursorCol += pastedData.length; //edide.editableCursor.pos[1]
+    return edide.editableCursor.select();
+  });
+};
+this.renderTo = (node, configs = {}) => {
+  var base;
+  this.configs = configs;
+  if ((base = this.configs).letterColor == null) {
+    base.letterColor = () => {
+      return 'white';
+    };
+  }
+  node = edide.render.toNode(node, { // hmm, don't really want to replace
+    '#editable': (editableNode) => {
+      this.editableNode = editableNode;
+      edide.editableCursor.editable = this.editableNode;
+      return {
+        Contenteditable: true,
+        onClick: (ev) => {
+          edide.editableCursor.updatePos(this.editableNode);
+          return ev.stopPropagation(); // party.lol
+        },
+        onKeyDown: keyDown,
+        onKeyUp: keyUp,
+        onKeyPress: (ev) => {
+          return revar.keyPressEv = ev; // revar.charCode = ev.charCode
+        },
+        onMouseDown: (ev) => {
+          return revar.mouseDown = ev;
+        },
+        onPaste: handlePaste,
+        styles: {
+          height: 'auto',
+          background: 'black',
+          outline: 0,
+          whiteSpace: 'nowrap',
+          fontFamily: 'Inconsolata, Courier',
+          paddingLeft: 1
+        },
+        div: 'foo bar baz'
+      };
+    },
+    pre: edide.editableDebug.render
+  });
+  reformatRow(0);
+  return node;
+};
+this.setValue = (fullText) => {
+  this.editableNode.innerHTML = '';
+  fullText.split('\n').forEach(this.addRow);
+  return pruneRootNodes();
+};
+this.getValue = () => {
+  var child, i, len, ref, str;
+  str = '';
+  if (!this.editableNode) {
+    return str;
+  }
+  ref = this.editableNode.children;
+  for (i = 0, len = ref.length; i < len; i++) {
+    child = ref[i];
+    str += child.textContent + "\n";
+  }
+  return str.slice(0, -1);
+};
+this.addRow = (text) => {
+  edide.dom.append(this.editableNode, {
+    '.row': text
+  });
+  return reformatRow(this.editableNode.children.length - 1);
+};
+this.insertRow = (ind, text) => {
+  edide.dom.before(this.getRowNode(ind), {
+    '.row': text
+  });
+  return reformatRow(ind);
+};
+this.getRowNode = (num) => {
+  return this.editableNode.childNodes[num];
+};
+this.getRow = (num) => {
+  return this.getRowNode(num).textContent;
+};
+edide.colorText.maxLatinHue = 720;
+reformatRow = (rInd) => {
+  var cInd, char, rowDiv;
+  if (rInd == null) {
+    return;
+  }
+  if (!(rowDiv = this.editableNode.children[rInd])) {
+    return edide.logProd(`unable to find row ${rInd}`);
+  }
+  if (rowDiv.tagName !== 'DIV') {
+    rowDiv = edide.dom.wrap(rowDiv, 'div');
+  }
+  edide.dom.replaceChildren(rowDiv, (function() {
+    var base, i, len, ref, results;
+    ref = rowDiv.textContent;
+    results = [];
+    for (cInd = i = 0, len = ref.length; i < len; cInd = ++i) {
+      char = ref[cInd];
+      if (char.charCodeAt(0) === 160) { // nbsp
+        char = ' ';
+      }
+      results.push({
+        span: {
+          text: char,
+          style: `color: ${typeof (base = this.configs).letterColor === "function" ? base.letterColor(char, rInd, cInd) : void 0 //edide.colorText.charColor char
+}`
+        }
+      });
+    }
+    return results;
+  }).call(this));
+};
+flushInline = (inline, nodeBefore) => {
+  var div, i, len, node;
+  if (!inline.length) {
+    return;
+  }
+  edide.dom.after(nodeBefore, {
+    div: ''
+  });
+  div = nodeBefore.nextSibling;
+  for (i = 0, len = inline.length; i < len; i++) {
+    node = inline[i];
+    edide.dom.remove(node);
+    div.appendChild(node);
+  }
+  return inline.length = 0;
+};
+pruneRootNodes = (reformatInd) => {
+  var i, inline, len, node, ref, results;
+  inline = [];
+  ref = Array.from(this.editableNode.children).reverse();
+  results = [];
+  for (i = 0, len = ref.length; i < len; i++) {
+    node = ref[i];
+    if (node.tagName === 'DIV') {
+      results.push(flushInline(inline, node));
+    } else {
+      results.push(inline.push(node));
+    }
+  }
+  return results;
+};
+checkEditable = () => {
+  var child, i, len, ref;
+  if (this.editableNode.children.length === 1) {
+    return;
+  }
+  ref = this.editableNode.children;
+  for (i = 0, len = ref.length; i < len; i++) {
+    child = ref[i];
+    edide.assert(child.tagName === 'DIV', 'only divs in root');
+  }
+};
+return editable;
+}).call(MODSELF={}, edide, MODSELF);
+edide.rejectIfRecompiled = (function (edide, rejectIfRecompiled) {
+if (!edide.inEditor) {
+  return () => {};
+}
+return (promise) => {
+  var recompiled, rootName;
+  ({rootName} = edide.moduleGate);
+  recompiled = false;
+  edide.editorModule.editor_events.on('before_recompile', () => {
+    return recompiled = true;
+  });
+  return promise.then(function(arg) {
+    if (recompiled || rootName !== edide.moduleGate.rootName) { // root module changed
+      return Promise.reject(); // quiet rejection; no need to show error
+    } else {
+      return arg; // arg get wrapped in promise
+    }
+  });
+};
+}).call(MODSELF={}, edide, MODSELF);
+edide.promise = (function (edide, promise) {Object.defineProperty(this, 'module_name', {value:'promise'});
+var localPromise, ref;
+localPromise = edide.global.origPromise = (ref = edide.global.origPromise) != null ? ref : edide.global.Promise;
+this.new = function(cb) {
+  if (edide.inEditor) {
+    return edide.rejectIfRecompiled(new Promise(cb)); // don't fire cb if code has been re-executed in the meantime
+  } else {
+    return new Promise(cb);
+  }
+};
+this.all = function(cbArray) {
+  if (edide.inEditor) { // check that after resolved, still editing same module
+    return edide.rejectIfRecompiled(Promise.all(cbArray));
+  } else {
+    return Promise.all(cbArray);
+  }
+};
+this.resolve = Promise.resolve.bind(Promise);
+this.reject = Promise.reject.bind(Promise);
+return promise;
+}).call(MODSELF={}, edide, MODSELF);
+edide.scriptContainer = (function (edide, scriptContainer) {
+var createContainer, ref;
+createContainer = () => {
+  var s;
+  s = document.createElement('div');
+  s.id = 'scripts';
+  return s;
+};
+return (ref = edide.qs('#scripts')) != null ? ref : document.body.appendChild(createContainer());
+}).call(MODSELF={}, edide, MODSELF);
+edide.showError = (function (edide, showError) {
+var error;
+error = (err) => {
+  if (edide.inEditor) {
+    return edide.editorModule.editor_error.show(err);
+  } else if (typeof edide.global.require === 'object' && (edide.global[edide.edideNamespace].prodErrorPrinter != null)) {
+    return edide.global[edide.edideNamespace].prodErrorPrinter.showError(err);
+  } else {
+    return console.error(err);
+  }
+};
+return (err) => {
+  var err2;
+  if (err != null ? err.stack : void 0) {
+    return error(err); // create error to capture stack trace
+  } else {
+    try {
+      throw Error(err);
+    } catch (error1) {
+      err2 = error1;
+      return error(err2);
+    }
+  }
+};
+}).call(MODSELF={}, edide, MODSELF);
+edide.requireScript = (function (edide, requireScript) {
+var base;
+if ((base = edide.global).requireScriptPromises == null) {
+  base.requireScriptPromises = new Map;
+}
+return (scriptSrc) => {
+  var promise;
+  if (promise = requireScriptPromises.get(scriptSrc)) {
+    return promise;
+  } else {
+    requireScriptPromises.set(scriptSrc, promise = edide.promise.new((resolve) => {
+      var el;
+      console.log('adding promised', scriptSrc);
+      el = document.createElement('script');
+      edide.scriptContainer.appendChild(el);
+      el.onload = resolve; //load_ready
+      el.type = 'application/javascript';
+      return el.src = scriptSrc;
+    }));
+    return promise.catch((err) => {
+      edide.showError(err);
+      return requireScriptPromises.delete(scriptSrc);
+    });
+  }
+};
+}).call(MODSELF={}, edide, MODSELF);
+edide.requireModule = (function (edide, requireModule) {
+var base;
+if ((base = edide.global).requireModulePromises == null) {
+  base.requireModulePromises = new Map;
+}
+return async(src, parent) => {
+  var promise;
+  if (edide.inEditor && parent) { // not src.match "://"
+    return (await edide.editorModule.moduleExecDynamic(src.match(/^[^.]+/)[0], parent));
+  }
+  if (src.search('/') === -1) {
+    src = './' + src;
+  }
+  if (promise = requireModulePromises.get(src)) {
+    return promise;
+  } else {
+    requireModulePromises.set(src, promise = edide.promise.new((resolve) => {
+      var el;
+      el = document.createElement('script');
+      edide.scriptContainer.appendChild(el);
+      el.onload = resolve; //load_ready
+      return el.src = src;
+    }));
+    return promise.catch((err) => {
+      edide.showError(err);
+      return requireModulePromises.delete(src);
+    });
+  }
+};
+}).call(MODSELF={}, edide, MODSELF);
+edide.onModuleChange = (function (edide, onModuleChange) {
+return (cb, once = true) => {
+  if (!edide.inEditor) {
+    return;
+  }
+  return edide.editorModule.editor_events.on('module_change', (prev, next) => {
+    var err, ref, res;
+    try {
+      res = cb(prev, next);
+      if (res instanceof Promise) {
+        return [false, res];
+      }
+    } catch (error) {
+      err = error;
+      if ((ref = edide.editorModule) != null) {
+        ref.editor_error.show(err);
+      }
+    }
+    return [!once]; // false removes -- but why array??
+  });
+};
+}).call(MODSELF={}, edide, MODSELF);
+edide.meta = (function (edide, meta) {Object.defineProperty(this, 'module_name', {value:'meta'});
+this.init = async() => {
+  var protoc;
+  protoc = location.protocol === 'file:' ? 'http:' : '';
+  await Promise.all([!edide.global.$ ? edide.requireScript(`${protoc}//code.jquery.com/jquery-2.2.4.min.js`) : void 0, edide.requireScript(`${protoc}//cdn.jsdelivr.net/npm/gun/lib/monotype.js`)]);
+  await edide.requireModule('metaJs.main', 'meta');
+  Object.assign(this, edide.global.meta);
+  return this.show();
+};
+this.hide = () => {
+  return $('#meta').hide();
+};
+this.show = () => {
+  return $('#meta').show();
+};
+edide.onModuleChange(this.hide);
+return meta;
+}).call(MODSELF={}, edide, MODSELF);
+edide.mmPipe = (function (edide, mmPipe) {Object.defineProperty(this, 'module_name', {value:'mmPipe'});
+var dist, lowpass, panner, react, revar, reverber, unvar;
+({revar, unvar, react} = edide.mmState.init());
+dist = lowpass = reverber = panner = null;
+this.initPipe = () => {
+  lowpass = new Tone.Filter(unvar.lowpass, 'lowpass', -12);
+  dist = new Tone.Distortion(unvar.distortion);
+  panner = new Tone.Panner();
+  panner.connect(dist);
+  dist.connect(lowpass);
+  lowpass.toMaster();
+  this.output = lowpass;
+  revar.pipeReady = true;
+  return edide.onUnload(() => {
+    if (dist != null) {
+      if (typeof dist.dipose === "function") {
+        dist.dipose();
+      }
+    }
+    if (lowpass != null) {
+      if (typeof lowpass.dispose === "function") {
+        lowpass.dispose();
+      }
+    }
+    return panner != null ? typeof panner.dispose === "function" ? panner.dispose() : void 0 : void 0;
+  });
+};
+this.initInstrument = (instrument) => {
+  instrument.connect(panner);
+  edide.onUnload(() => {
+    return instrument != null ? instrument.disconnect() : void 0;
+  });
+  return instrument;
+};
+revar.panner = () => {
+  return revar.balance;
+};
+react('panner', () => {
+  revar.panner;
+  return panner != null ? panner.pan.value = revar.panner : void 0;
+});
+react('pipe distortion', () => {
+  var ref;
+  revar.distortion;
+  revar.lowpass;
+  if (dist != null) {
+    dist.distortion = revar.distortion;
+  }
+  return lowpass != null ? (ref = lowpass.frequency) != null ? ref.linearRampTo(revar.lowpass, 0) : void 0 : void 0;
+});
+return mmPipe;
+}).call(MODSELF={}, edide, MODSELF);
+edide.mmInstruments = (function (edide, mmInstruments) {Object.defineProperty(this, 'module_name', {value:'mmInstruments'});
+var defaultUrl = 'https://nbrosowsky.github.io/tonejs-instruments/samples/'
+var { revar, unvar, react } = edide.mmState
+var defaultInstrument = 'electric-guitar'
+this.initInstrument = async (resolve) => {
+  await edide.requireScript('https://cdnjs.cloudflare.com/ajax/libs/tone/13.8.9/Tone.js')
+  edide.mmPipe.initPipe()
+}
+var instrumentCache = edide.keep({})
+this.createNew = () => {
+  var {name} = unvar.instrumentConf
+  var instrument, endOfPipe
+  var instrumentConf = this.instruments[name]
+  if (instrumentConf.module_name) {
+    var res = instrumentConf.init()
+    if (Array.isArray(res)) {
+      instrument = res[0]
+      endOfPipe = res[1]
+    } else {
+      instrument = endOfPipe = res
+    }
+  } else if (instrumentCache[name]) {
+    instrument = endOfPipe = instrumentCache[name]
+  } else {
+    var noteFiles = buildNotes(instrumentConf)
+    revar.instrumentsLoading++
+    var inst = new Tone.Sampler(noteFiles, { //edide.mmInstrumentssAll[name]
+      "release" : 1,
+      "baseUrl" : instrumentConf.url || defaultUrl + name + '/',
+      "onload"  : () => revar.instrumentsLoading--
+    })
+    inst.soundFontInstrument = true
+    instrument = endOfPipe = instrumentCache[name] = inst //[inst, inst]
+  }
+  edide.mmPipe.initInstrument(endOfPipe)
+  return instrument
+}
+this.isReady = () => {
+  var { current } = this
+  return current && (typeof current.loaded == 'undefined' || current.loaded === true)
+}
+function buildNotes({startNote, notes, step, skipNotes}) {
+  var [startInd] = edide.noteFreq.findNote(startNote)
+  var noteFiles = {}
+  if (Array.isArray(notes)) {
+    notes.forEach(note => {
+      noteFiles[note] = note.replace('#','s') + '.[mp3|ogg]'
+    })
+  } else {
+    for (let i=0; i < notes*step; i+=step) {
+      let note = edide.noteFreq.notes[startInd + i][0];
+      if (skipNotes && skipNotes.has(note))
+        continue
+      noteFiles[note] = note.replace('#','s') + '.[mp3|ogg]'
+    }
+  }
+  return noteFiles
+}
+this.instruments = edide.instrumentConfigs
+this.instrumentList = Object.values(this.instruments)
+react('active instrument config', () => {
+  revar.instrumentConf = this.instruments[revar.instrument] // conf
+})
+return mmInstruments;
+}).call(MODSELF={}, edide, MODSELF);
+edide.number = (function (edide, number) {Object.defineProperty(this, 'module_name', {value:'number'});
+this.map = function(val, fromMin, fromMax, toMin, toMax) {
+  var fromRange, toRange;
+  fromRange = fromMax - fromMin;
+  toRange = toMax - toMin;
+  return (val - fromMin) * toRange / fromRange + toMin;
+};
+this.decimals = (num, dec) => {
+  var acc;
+  acc = Math.pow(10, dec);
+  return Math.round(num * acc) / acc;
+};
+return number;
+}).call(MODSELF={}, edide, MODSELF);
+edide.rdom = (function (edide, rdom) {
+var reactiveEl;
+return reactiveEl = (contentFunc) => {
+  contentFunc.type = 'dom'; // for debugging
+  return (node, attrName) => {
+    var setter;
+    setter = () => {
+      var content;
+      content = contentFunc(node);
+      if (attrName != null) {
+        if (attrName === 'text') {
+          node.textContent = content;
+        } else {
+          node.setAttribute(attrName, content);
+        }
+        return;
+      }
+      switch (typeof content) {
+        case 'string':
+          node.textContent = content;
+          break;
+        case 'object':
+          edide.domReplaceChildren(node, content);
+      }
+      return node;
+    };
+    setter.type = `dom ${(attrName ? 'attr' : 'node') // for graph debugging
+}`;
+    return edide.var(setter);
+  };
+};
+}).call(MODSELF={}, edide, MODSELF);
+edide.str = (function (edide, str) {Object.defineProperty(this, 'module_name', {value:'str'});
+var ifs;
+this.if = ifs = edide.strIf;
+this.capitalize = function(str) {
+  return str[0].toUpperCase() + str.slice(1);
+};
+this.dasherize = function(str) {
+  return str.replace(/([A-Z])/g, function(full, match) {
+    return '-' + match.toLowerCase();
+  }).replace(/ /g, '-');
+};
+this.parsesToNumber = this.isNumber = edide.strParsesToNumber;
+this.truncate = function(str, limit, truncStr = '...') {
+  if (str.length > limit) {
+    return str.slice(0, limit) + truncStr;
+  } else {
+    return str;
+  }
+};
+this.titleize = function(str) {
+  return str.replace(/[-_]/g, ' ').replace(/(^| )(\w)/g, function(full, s, firstChar) {
+    return s + firstChar.toUpperCase();
+  }).replace(/(\w)([A-Z])/g, function(f, s, c) {
+    return s + ' ' + c;
+  });
+};
+this.random = edide.strRandom;
+this.remove = function(full, remove) {
+  return full.replace(remove, '');
+};
+this.reverse = function(str) {
+  return str.split("").reverse().join('');
+};
+return str;
+}).call(MODSELF={}, edide, MODSELF);
+edide.assign = (function (edide, assign) {
+return Object.assign;
+}).call(MODSELF={}, edide, MODSELF);
+edide.pointerLock = (function (edide, pointerLock) {Object.defineProperty(this, 'module_name', {value:'pointerLock'});
+var removeMoveListener;
+removeMoveListener = null;
+edide.addEventListener(document, 'pointerlockchange', (ev) => {
+  if (typeof removeMoveListener === "function") {
+    removeMoveListener();
+  }
+  if (document.pointerLockElement) { // is body
+    removeMoveListener = edide.addEventListener(document, "mousemove", this.cb);
+  }
+});
+this.turnOn = (cb) => {
+  this.cb = cb;
+  return document.body.requestPointerLock();
+};
+this.turnOff = () => {
+  return document.exitPointerLock();
+};
+return pointerLock;
+}).call(MODSELF={}, edide, MODSELF);
+edide.catchError = (function (edide, catchError) {
+return (action) => {
+  var err, ref;
+  try {
+    return action(); //.call thisObj
+  } catch (error) {
+    err = error;
+    if ((ref = edide.editorModule) != null) {
+      ref.editor_error.show(err);
+    }
+    return console.error(err);
+  }
+};
+}).call(MODSELF={}, edide, MODSELF);
+edide.unload = (function (edide, unload) {Object.defineProperty(this, 'module_name', {value:'unload'});
+var unloading;
+unloading = false;
+this.unloads = edide.keep({});
+this.global = edide.keep([]);
+this.add = (module, unloadAction) => {
+  var base, module_name;
+  if (!edide.inEditor) {
+    return;
+  }
+  if (unloading) {
+    (unloadAction != null ? unloadAction : module)(); // should be in try catch ?
+    return console.warn("Unload in progress; cancelling new unloadable actions");
+  }
+  if (!unloadAction) {
+    unloadAction = module;
+    module = null;
+  }
+  if (module) {
+    ({module_name} = module); // is this really needed (or good idea to begin with?)
+  } else {
+    module_name = edide.moduleGate.executingName;
+  }
+  if (module_name == null) {
+    return this.addGlobal(unloadAction); // TODO: change to throwing error and suggesting using unload.addGlobal
+  }
+  if ((base = this.unloads)[module_name] == null) {
+    base[module_name] = [];
+  }
+  this.unloads[module_name].push(unloadAction);
+};
+this.addGlobal = (unloadAction) => {
+  return this.global.unshift(unloadAction);
+};
+this.call = (moduleName) => { // "call" is a bit confusing name for function..
+  var i, len, unloadAction, unloads;
+  if (!(unloads = this.unloads[moduleName])) {
+    return;
+  }
+  unloading = true;
+  for (i = 0, len = unloads.length; i < len; i++) {
+    unloadAction = unloads[i];
+    edide.catchError(unloadAction); //, module
+  }
+  unloads.length = 0;
+  return unloading = false;
+};
+this.callGlobalWithWait = async() => {
+  var unloadAction;
+  unloading = true;
+  await Promise.all((function() {
+    var i, len, ref, results;
+    ref = this.global;
+    results = [];
+    for (i = 0, len = ref.length; i < len; i++) {
+      unloadAction = ref[i];
+      results.push(edide.catchError(unloadAction)); //, {}
+    }
+    return results;
+  }).call(this));
+  this.global.length = 0;
+  return unloading = false;
+};
+this.callGlobal = () => {
+  var i, len, ref, unloadAction;
+  unloading = true;
+  ref = this.global;
+  for (i = 0, len = ref.length; i < len; i++) {
+    unloadAction = ref[i];
+    edide.catchError(unloadAction); //, {}
+  }
+  this.global.length = 0;
+  return unloading = false;
+};
+this.clear = (module) => {
+  return module.unload = [];
+};
+return unload;
+}).call(MODSELF={}, edide, MODSELF);
+edide.mmPointerSlider = (function (edide, mmPointerSlider) {Object.defineProperty(this, 'module_name', {value:'mmPointerSlider'});
+var height, node, padding, revar, showValue, unvar;
+({revar, unvar} = edide.reactive({
+  name: '',
+  value: 0
+}));
+padding = 20;
+showValue = (val) => {
+  if (revar.percentage) {
+    return edide.number.decimals(100 * val, unvar.decimals - 2) + '%';
+  } else {
+    return val;
+  }
+};
+node = edide.dom.new({
+  '#pointerSlider': {
+    '.min.value': {
+      text: edide.rdom(() => {
+        return showValue(revar.min);
+      })
+    },
+    '.max.value': (maxEl) => {
+      this.maxEl = maxEl;
+      return {
+        text: edide.rdom(() => {
+          return showValue(revar.max);
+        }),
+        styles: {
+          right: padding
+        }
+      };
+    },
+    '.current': {
+      Style: edide.rdom(() => {
+        var max, min, percentage, width;
+        ({min, max, percentage} = unvar);
+        width = window.innerWidth - this.maxEl.clientWidth - 2 * padding;
+        return `left: ${padding + width * (revar.value - min) / (max - min)}px`;
+      }),
+      '.text': {
+        text: edide.rdom(() => {
+          return edide.str.titleize(revar.name);
+        })
+      },
+      '.value': {
+        text: edide.rdom(() => {
+          return showValue(revar.value);
+        })
+      }
+    }
+  }
+});
+edide.styles.add({
+  '#pointerSlider': {
+    color: 'white',
+    position: 'fixed',
+    top: '50%',
+    transform: 'translate(0, -50%)',
+    textShdow: "1px 1px 1px black",
+    background: "hsla(0,0%,0%,0.4)",
+    padding: padding,
+    width: "100%",
+    fontSize: height = '5em',
+    zIndex: 1000000, // to go above meta...
+    lineHeight: '1',
+    borderTop: "1px solid hsla(0,0%,100%,0.04)",
+    borderBottom: "1px solid hsla(0,0%,0%,0.1)",
+    height: '1.3em',
+    '.min, .max, .current': {
+      bottom: -padding / 3,
+      position: 'absolute'
+    },
+    '.min, .max': {
+      color: '#666'
+    },
+    '.current .text': {
+      fontSize: '0.3em'
+    }
+  }
+});
+this.init = (varName, max, min = 0, decimals = 2, percentage) => {
+  var minChange;
+  minChange = 1 / ((max - min) * Math.pow(10, decimals));
+  return {
+    start: (ev) => {
+      var changePerPixel, val;
+      edide.assign(revar, {
+        min,
+        max,
+        decimals,
+        percentage,
+        name: varName,
+        value: val = edide.mmState.unvar[varName]
+      });
+      document.body.appendChild(node);
+      changePerPixel = (max - min) / window.innerWidth;
+      return edide.pointerLock.turnOn(({movementX}) => {
+        var pixChange, valChange;
+        pixChange = changePerPixel * movementX;
+        valChange = Math.sign(pixChange) * Math.max(Math.abs(pixChange), minChange);
+        val += valChange;
+        val = Math.max(min, Math.min(val, max));
+        val = edide.number.decimals(val, decimals);
+        edide.mmState.revar[varName] = val;
+        return revar.value = val;
+      });
+    },
+    end: (ev) => {
+      edide.pointerLock.turnOff();
+      return edide.domRemove(node);
+    }
+  };
+};
+edide.unload.add(() => {
+  return edide.dom.remove('#pointerSlider');
+});
+return mmPointerSlider;
+}).call(MODSELF={}, edide, MODSELF);
+edide.musicScales = (function (edide, musicScales) {Object.defineProperty(this, 'module_name', {value:'musicScales'});
+this.full = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+this.scaleSteps = {
+  pentatonic: [
+    0,
+    3,
+    2,
+    2,
+    3 // hidden 2 # "pentatonicMinor"
+  ],
+  major: [
+    0,
+    2,
+    2,
+    1,
+    2,
+    2,
+    2 // hidden to beginning: 1 # "naturalMajor"
+  ],
+  minor: [
+    0,
+    2,
+    1,
+    2,
+    2,
+    1,
+    2 // hidden to beginning: 2 # "naturalMinor"
+  ]
+};
+this.triadSteps = {
+  major: [
+    0,
+    4,
+    3 // positive valence
+  ],
+  minor: [0, 3, 4]
+};
+this.triadCombinations = {
+  protagonism: 'M2M',
+  outerSpace: 'M6M',
+  fantastical: 'M8M',
+  sadness: 'M4m',
+  romantic: 'M5m', // and middle eastern
+  wonder: 'm5M', // and trancendence
+  mystery: 'm2M', // and dark comedy
+  dramatic: 'm11M',
+  antagonismDanger: 'm6m', // less character based
+  antagonismEvil: 'm8m' // cahracter based
+};
+return musicScales;
+}).call(MODSELF={}, edide, MODSELF);
+edide.mmMeta = (function (edide, mmMeta) {Object.defineProperty(this, 'module_name', {value:'mmMeta'});
+var changeAndBack, insertConfigs, insertStyles, react, revar, strAsChar, unvar;
+({revar, unvar, react} = edide.mmState);
+insertStyles = {
+  'font-size': '0.8em',
+  'width': '100%',
+  'text-align': 'center'
+};
+insertConfigs = (str) => {
+  edide.editable.insertRow(edide.editableCursor.unvar.cursorRow, str);
+  edide.editableCursor.select();
+  return edide.meta.flip(false);
+};
+changeAndBack = (prop, val) => {
+  revar[prop] = val;
+  return edide.meta.check('down', 'back'); // NOTE: fires 'up' event on list above..
+};
+strAsChar = (str) => {
+  var i, j, ref, val;
+  val = 1;
+  for (i = j = 0, ref = str.length; (0 <= ref ? j < ref : j > ref); i = 0 <= ref ? ++j : --j) {
+    val *= str.charCodeAt(i);
+  }
+  return String.fromCharCode(val);
+};
+mmMeta.init = async() => {
+  var PlayPause, blur, configsEffects, configsNotes, configsRoot, itch, refreshEffects, refreshNotes, refreshPlayPause, refreshRoot, rootNotes, scale, scales, speed;
+  await edide.meta.init();
+  configsRoot = {
+    combo: [':'], // note : can't be pressed but at least clicking button works
+    styles: insertStyles,
+    on: () => {
+      return insertConfigs(configsRoot.name);
+    }
+  };
+  react("Refresh 'insert configs' button", refreshRoot = () => {
+    configsRoot.name = `:bpm ${revar.bpm}: \:instrument ${revar.instrument}:`;
+    return edide.meta.edit(configsRoot);
+  });
+  refreshRoot;
+  edide.meta.edit({
+    combo: ['I'],
+    name: 'Instrument'
+  });
+  edide.mmInstruments.instrumentList.forEach(({name}) => {
+    return edide.meta.edit({
+      combo: ['I', name[0]],
+      name: name,
+      on: () => {
+        return changeAndBack('instrument', name);
+      }
+    });
+  });
+  PlayPause = {
+    combo: ['P'],
+    on: () => {
+      return revar.playing = !unvar.playing;
+    }
+  };
+  react("Toggle Play/Pause in meta", refreshPlayPause = () => {
+    PlayPause.name = revar.playing ? 'Pause' : 'Play';
+    return edide.meta.edit(PlayPause);
+  });
+  refreshPlayPause();
+  speed = edide.mmPointerSlider.init('bpm', 900, 60, 0);
+  edide.meta.edit({
+    name: "speed (BPM)", //  #{revar.bpm}
+    combo: ['B'],
+    on: speed.start,
+    up: speed.end //=> stopModifying()
+  });
+  edide.meta.edit({
+    name: 'Effects',
+    combo: ['E']
+  });
+  configsEffects = {
+    combo: [
+      'E',
+      ':' // note : can't be pressed but at least clicking button works
+    ],
+    styles: insertStyles,
+    on: () => {
+      return insertConfigs(configsEffects.name);
+    }
+  };
+  react("Refresh 'insert effects' button", refreshEffects = () => {
+    configsEffects.name = `:itch ${revar.itch}: \:blur ${revar.blur}:`;
+    return edide.meta.edit(configsEffects);
+  });
+  refreshEffects;
+  itch = edide.mmPointerSlider.init('itch', 1, 0, 2, true);
+  edide.meta.edit({
+    name: 'Itch',
+    combo: ['E', 'I'],
+    on: itch.start,
+    up: itch.end //=> stopModifying()
+  });
+  blur = edide.mmPointerSlider.init('blur', 1, 0, 2, true);
+  edide.meta.edit({
+    name: 'Blur',
+    combo: ['E', 'B'],
+    on: blur.start,
+    up: blur.end //=> stopModifying()
+  });
+  configsNotes = {
+    combo: [
+      'N',
+      ':' // note : can't be pressed but at least clicking button works
+    ],
+    styles: insertStyles,
+    on: () => {
+      return insertConfigs(configsNotes.name);
+    }
+  };
+  react("Refresh 'insert configs' button", refreshNotes = () => {
+    configsNotes.name = `:root ${revar.root}: \:scale ${revar.scale}:`;
+    return edide.meta.edit(configsNotes);
+  });
+  refreshNotes;
+  edide.meta.edit({
+    name: 'Notes',
+    combo: ['N']
+  });
+  edide.meta.edit({
+    name: 'Root',
+    combo: ['N', 'R'],
+    sort: null
+  });
+  rootNotes = edide.noteFreq.notes.slice(21, 57).map((n) => {
+    return n[0];
+  });
+  rootNotes.forEach((rNote, ind) => {
+    return edide.meta.edit({
+      combo: [
+        'N',
+        'R',
+        strAsChar(rNote) // parseInt edide.strRandom()
+      ],
+      name: rNote,
+      on: () => {
+        return changeAndBack('root', rNote);
+      }
+    });
+  });
+  scale = {
+    combo: ['N', 'S'],
+    name: 'Scale'
+  };
+  edide.meta.edit(scale);
+  scales = Object.keys(edide.musicScales.scaleSteps);
+  return scales.forEach((scaleName) => {
+    return edide.meta.edit({
+      combo: ['N', 'S', strAsChar(scaleName.replace('natural', ''))],
+      name: scaleName,
+      on: () => {
+        return changeAndBack('scale', scaleName);
+      }
+    });
+  });
+};
+return mmMeta;
+}).call(MODSELF={}, edide, MODSELF);
+edide.clone = (function (edide, clone) {
+return (...objects) => {
+  if (Array.isArray(objects[0])) {
+    return Object.assign([], ...objects);
+  } else {
+    return Object.assign({}, ...objects);
+  }
+};
+}).call(MODSELF={}, edide, MODSELF);
+edide.mmConfigs = (function (edide, mmConfigs) {Object.defineProperty(this, 'module_name', {value:'mmConfigs'});
+var defaultVars, mutatingProp, mutatingVars, stateVars, vars;
+vars = {}; // varName: config object
+mutatingVars = {};
+stateVars = edide.set('itch', 'blur', 'instrument', 'bpm', 'pace', 'scale', 'root', 'balance');
+this.hasVar = (varName) => {
+  var ref, ref1;
+  return !!((ref = (ref1 = vars[varName]) != null ? ref1 : mutatingVars[varName]) != null ? ref : stateVars.has(varName));
+};
+this.activateVar = (name, value) => {
+  var configs;
+  if (value != null) {
+    configs = stateVars.has(name) ? {
+      [`${name}`]: value
+    } : mutatingVars[name] != null ? edide.clone(mutatingVars[name]) : void 0;
+    if (edide.strParsesToNumber(value)) {
+      value = parseFloat(value);
+    }
+    configs[mutatingProp(configs)] = value;
+    return this.activate(configs);
+  } else {
+    return this.activate(vars[name]);
+  }
+};
+mutatingProp = (configs) => {
+  var name, val;
+  for (name in configs) {
+    val = configs[name];
+    if (val === '*') {
+      return name;
+    }
+  }
+  return false;
+};
+this.activate = (conf) => {
+  if (conf.name != null) {
+    return; // throw warning?
+  }
+  return Object.assign(edide.mmState.revar, conf);
+};
+this.reset = () => {
+  return edide.assign(edide.mmState.revar, edide.mmState.defaults);
+};
+this.addVar = (varName, config) => { // , activate=true
+  if (mutatingProp(config)) {
+    return mutatingVars[varName] = config;
+  } else {
+    return vars[varName] = config;
+  }
+};
+defaultVars = {
+  bass: {
+    "instrument": "bass-electric"
+  },
+  cello: {
+    "instrument": "cello"
+  },
+  guitar: {
+    "instrument": "guitar-acoustic"
+  },
+  eguitar: {
+    "instrument": "guitar-electric"
+  },
+  piano: {
+    "instrument": "piano"
+  },
+  synth: {
+    "instrument": "synth-simple"
+  },
+  xylophone: {
+    "instrument": "xylophone"
+  },
+  pentatonic: {
+    "scale": "pentatonic"
+  },
+  major: {
+    "scale": "major"
+  },
+  minor: {
+    "scale": "minor"
+  }
+};
+this.init = () => {
+  var conf, name;
+  vars = {};
+  for (name in defaultVars) {
+    conf = defaultVars[name];
+    this.addVar(name, conf, false);
+  }
+};
+this.init();
+return mmConfigs;
+}).call(MODSELF={}, edide, MODSELF);
+edide.mathOp = (function (edide, mathOp) {Object.defineProperty(this, 'module_name', {value:'mathOp'});
+this.sum = function(a, b) {
+  return a + b;
+};
+this.multiply = function(a, b) {
+  return a * b;
+};
+return mathOp;
+}).call(MODSELF={}, edide, MODSELF);
+edide.mmKeyboard = (function (edide, mmKeyboard) {Object.defineProperty(this, 'module_name', {value:'mmKeyboard'});
+var A, a, char, chari, i, j, len, len1, noncaps, qwertyChar, qwertyRows, revar, row, rowi, space, unvar;
+({revar, unvar} = edide.mmState.init());
+revar.scaleSteps = () => {
+  return edide.musicScales.scaleSteps[revar.scale];
+};
+this.special = {
+  rest: '.',
+  long: '=',
+  comment: '#',
+  var: ':',
+  confStart: '{',
+  confEnd: '}'
+};
+this.specialKeyCodes = new Set(Object.values(this.special).map((s) => {
+  return s.charCodeAt(0);
+}));
+this.specialChars = new Set(Object.values(this.special));
+this.isPauseKey = (keyCode) => {
+  return this.specialKeyCodes.has(keyCode);
+};
+this.isSpecialChar = (char) => {
+  return this.specialChars.has(char);
+};
+this.isPauseChar = this.isSpecialChar; // not really...
+this.keyboards = ['qwerty', 'abc'];
+a = 'a'.charCodeAt(0);
+A = 'A'.charCodeAt(0);
+space = ' '.charCodeAt(0);
+this.isCaps = (key) => {
+  return A <= key && key < a;
+};
+this.capsDiff = a - A;
+noncaps = (key) => {
+  if (this.isCaps(key)) {
+    return key + this.capsDiff;
+  } else {
+    return key;
+  }
+};
+this.getNoteInd = (key) => {
+  var maxInstrumentNoteInd, noteBaseInd, noteInd, notes, startNote, step;
+  ({startNote, notes, step} = unvar.instrumentConf);
+  startNote = unvar.root;
+  noteBaseInd = edide.noteFreq.findNote(startNote)[0];
+  noteInd = this[this.keyboards[unvar.keyboardInd]](noncaps(key), noteBaseInd);
+  maxInstrumentNoteInd = noteBaseInd + notes * step;
+  while (noteInd > maxInstrumentNoteInd) {
+    noteInd -= 2 * 12;
+  }
+  return noteInd;
+};
+this.abc = (key, baseInd) => {
+  var fromLowest, noteInd, stepsFromClosestOctave;
+  fromLowest = key - a;
+  stepsFromClosestOctave = fromLowest % revar.scaleSteps.length;
+  noteInd = 0;
+  noteInd += revar.scaleSteps.slice(0, +stepsFromClosestOctave + 1 || 9e9).reduce(edide.mathOp.sum);
+  noteInd += 12 * Math.floor(fromLowest / revar.scaleSteps.length);
+  return baseInd + noteInd;
+};
+qwertyRows = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
+qwertyChar = {};
+for (rowi = i = 0, len = qwertyRows.length; i < len; rowi = ++i) {
+  row = qwertyRows[rowi];
+  for (chari = j = 0, len1 = row.length; j < len1; chari = ++j) {
+    char = row[chari];
+    qwertyChar[char.charCodeAt(0)] = [rowi, chari];
+  }
+}
+this.qwerty = (key, baseInd) => {
+  var charSteps, halfSteps, noteInd, octave, rowchar;
+  if (!(rowchar = qwertyChar[key])) {
+    return;
+  }
+  [row, char] = rowchar;
+  octave = qwertyRows.length - 1 - row + Math.floor(char / unvar.scaleSteps.length);
+  char = char % revar.scaleSteps.length;
+  charSteps = revar.scaleSteps.slice(0, +char + 1 || 9e9).reduce((a, b) => {
+    return a + b;
+  });
+  halfSteps = 12 * octave + charSteps;
+  return noteInd = baseInd + halfSteps;
+};
+return mmKeyboard;
+}).call(MODSELF={}, edide, MODSELF);
+edide.chars = (function (edide, chars) {Object.defineProperty(this, 'module_name', {value:'chars'});
+this.space = ' ';
+this.nonBreakingSpace = ' ';
+this.enter = "\n";
+return chars;
+}).call(MODSELF={}, edide, MODSELF);
+edide.mmParserSpecial = (function (edide, mmParserSpecial) {Object.defineProperty(this, 'module_name', {value:'mmParserSpecial'});
+this.config = (trackStr, ts = {}) => {
+  var endInd, err, name;
+  endInd = trackStr.search('}') || trackStr.length;
+  try {
+    ts.conf = JSON.parse(trackStr.slice(0, +endInd + 1 || 9e9));
+    if (ts.conf.name != null) {
+      ({name} = ts.conf);
+      delete ts.conf.name;
+      edide.mmConfigs.addVar(name, ts.conf);
+    } else {
+      edide.mmConfigs.activate(ts.conf); // add variable if exists
+    }
+  } catch (error) {
+    err = error;
+    ts.skip = true; // could be used to show error highlighting in editor
+    edide.showError(err); // remove this if error highlighting implemented
+  }
+  return endInd;
+};
+this.var = (track, trackState) => {
+  var err, i, value, varLength, varName, varStr;
+  ({i} = trackState);
+  varLength = track.slice(i + 1).indexOf(edide.mmKeyboard.special.var);
+  if (varLength === -1) {
+    return false;
+  }
+  varStr = track.slice(i + 1, +(i + varLength) + 1 || 9e9);
+  [varName, value] = varStr.split(' ');
+  if (!edide.mmConfigs.hasVar(varName)) {
+    return false;
+  }
+  try {
+    edide.mmConfigs.activateVar(varName, value);
+    trackState.i += varLength + 2;
+    return true;
+  } catch (error) {
+    err = error;
+    return false;
+  }
+};
+return mmParserSpecial;
+}).call(MODSELF={}, edide, MODSELF);
+edide.mmNote = (function (edide, mmNote) {Object.defineProperty(this, 'module_name', {value:'mmNote'});
+this.fromChar = (char) => {
+  return this.fromKeyCode(char.charCodeAt(0));
+};
+this.fromKeyCode = (key) => {
+  var noteInd, ref;
+  if (typeof (noteInd = edide.mmKeyboard.getNoteInd(key)) === 'number') {
+    return (ref = edide.noteFreq.notes[noteInd]) != null ? ref[0] : void 0;
+  }
+};
+return mmNote;
+}).call(MODSELF={}, edide, MODSELF);
+edide.mmParser = (function (edide, mmParser) {Object.defineProperty(this, 'module_name', {value:'mmParser'});
+var getNoteLength, nonBreakingSpace, processTrack, revar, space, unvar;
+({revar, unvar} = edide.mmState);
+getNoteLength = (row, noteInd) => {
+  var char, length;
+  length = 1;
+  while (char = row[++noteInd]) {
+    if (char === edide.mmKeyboard.special.long) {
+      length++;
+    } else {
+      break;
+    }
+  }
+  return length;
+};
+({space, nonBreakingSpace} = edide.chars);
+processTrack = (track, ccs, ts) => {
+  var bef, chord, groupingChars, keyCode, lastSpace, note, repeat, repeatStart;
+  if (!track[ts.i]) {
+    return;
+  }
+  if (ts.skip) { // comment or erroneous chars
+    return;
+  }
+  switch (track[ts.i]) {
+    case '{':
+      return ts.i += edide.mmParserSpecial.config(track.slice(ts.i), ts); //  parseConfigs
+    case '*':
+      if (ts.repeat != null) {
+        ts.repeat--;
+        if (ts.repeat > 0) {
+          ts.i = ts.iStart = ts.repeatStart; // repeats done
+        } else {
+          ts.repeat = ts.repeatStart = null;
+          ts.i++; // step over '*' so won't end up starting repeats again
+        }
+      } else {
+        if (isNaN(repeat = parseInt(track.slice(ts.i + 1)))) {
+          ts.i++; // unable to parse number of repeats, skip them
+        } else {
+          ts.repeat = repeat - 1;
+          bef = track.slice(0, ts.i);
+          groupingChars = ['(', space, nonBreakingSpace, '*'];
+          lastSpace = Math.max(...groupingChars.map((c) => {
+            return bef.lastIndexOf(c);
+          }));
+          repeatStart = lastSpace !== -1 ? lastSpace + 1 : 0; // beginning of row if no grouping char found
+          ts.i = ts.iStart = ts.repeatStart = repeatStart;
+        }
+      }
+      return processTrack(track, ccs, ts);
+    case '[':
+      ccs.chord = [];
+      ts.i++;
+      return processTrack(track, ccs, ts);
+    case ']':
+      ts.i++;
+      ({chord} = ccs);
+      if (!chord) { // illegal - missing beginning [
+        return processTrack(track, ccs, ts);
+      }
+      ccs.chord = null;
+      if (chord.length) {
+        if (!unvar.preprocessing) {
+          revar.playNote = [chord, getNoteLength(track, ts.i)];
+        }
+        ccs.played = true;
+      } else {
+        processTrack(track, ccs, ts);
+      }
+      return;
+    case edide.mmKeyboard.special.var:
+      if (edide.mmParserSpecial.var(track, ts)) {
+        processTrack(track, ccs, ts); // recursive, since next char could be another var, e.g. \:bass::minor:
+      } else {
+        ts.skip = true; // parse error
+      }
+      return;
+    case edide.mmKeyboard.special.comment:
+      return ts.skip = true;
+  }
+  if (!(keyCode = track.charCodeAt(ts.i))) {
+    return;
+  }
+  ts.i++;
+  if (note = edide.mmNote.fromKeyCode(keyCode)) {
+    if (ccs.chord) {
+      ccs.chord.push(note);
+      processTrack(track, ccs, ts);
+    } else {
+      if (!unvar.preprocessing) {
+        revar.playNote = [note, getNoteLength(track, ts.i)];
+      }
+      ccs.played = true;
+    }
+  } else if (edide.mmKeyboard.isPauseKey(keyCode)) {
+    ccs.played = true; // "play silence"
+  } else {
+    processTrack(track, ccs, ts);
+  }
+};
+this.splitSections = (str) => {
+  var i, j, prevInd, ref, row, section, sections;
+  str = str.replace('&\n', ''); // TODO fix row tracking with &\n
+  sections = [];
+  section = null;
+  row = 0;
+  prevInd = 0;
+  for (i = j = 0, ref = str.length; (0 <= ref ? j <= ref : j >= ref); i = 0 <= ref ? ++j : --j) {
+    if (!(str[i] === '\n' || i === str.length)) {
+      continue;
+    }
+    if (str[i - 1] === '\n') {
+      if (section != null) {
+        sections.push(section);
+      }
+      section = null;
+    }
+    if (i > prevInd) {
+      if (section == null) {
+        section = {
+          row: row,
+          tracks: []
+        };
+      }
+      section.tracks.push(str.slice(prevInd, i));
+    }
+    row++;
+    prevInd = i + 1;
+  }
+  if (section != null) {
+    sections.push(section);
+  }
+  sections.row = 0;
+  return sections;
+};
+this.play = (song, sectionInd, trackStates) => {
+  var ccs, section;
+  if (!unvar.playing) {
+    return;
+  }
+  revar.highlight = null;
+  sectionInd = sectionInd || 0;
+  if (typeof song === 'string') {
+    song = this.splitSections(song);
+  }
+  section = song[sectionInd];
+  if (!section) { // song finished
+    if (!unvar.preprocessing) {
+      revar.playing = false;
+    }
+    return;
+  }
+  if (!Array.isArray(trackStates)) {
+    trackStates = section.tracks.map(() => {
+      return {
+        i: 0 // initi track indices on first call to section
+      };
+    });
+  }
+  ccs = {}; // chord, played  # TODO change back to chord: [C3, D3] and [].played = true
+  section.tracks.forEach((track, tInd) => {
+    var conf, i, iStart;
+    if (conf = trackStates[tInd].conf) {
+      return edide.mmConfigs.activate(conf);
+    } else {
+      trackStates[tInd].iStart = trackStates[tInd].i;
+      processTrack(track, ccs, trackStates[tInd]);
+      ({iStart, i} = trackStates[tInd]);
+      if (i > iStart) {
+        return revar.highlight = [
+          section.row + tInd,
+          iStart,
+          i - 1 // song.row+
+        ];
+      }
+    }
+  });
+  if (ccs.played) {
+    if (unvar.preprocessing) {
+      this.play(song, sectionInd, trackStates);
+    } else {
+      edide.setTimeout(() => {
+        return this.play(song, sectionInd, trackStates);
+      }, unvar.beatDelay);
+    }
+  } else {
+    this.play(song, sectionInd + 1);
+  }
+};
+return mmParser;
+}).call(MODSELF={}, edide, MODSELF);
+edide.cloneSibling = (function (edide, cloneSibling) {
+return (srcObj) => {
+  var o;
+  o = Object.create(Object.getPrototypeOf(srcObj));
+  Object.assign(o, srcObj);
+  return o;
+};
+}).call(MODSELF={}, edide, MODSELF);
+edide.times = (function (edide, times) {
+return (timesNum, action) => {
+  while (timesNum-- > 0) {
+    action(timesNum + 1);
+  }
+};
+}).call(MODSELF={}, edide, MODSELF);
+edide.sleep = (function (edide, sleep) {
+var sleep;
+sleep = (ms) => {
+  var resolve, timeout;
+  timeout = resolve = null;
+  return edide.promise.new((res) => {
+    resolve = res;
+    return timeout = edide.setTimeout(ms, res);
+  });
+};
+return sleep;
+}).call(MODSELF={}, edide, MODSELF);
+edide.mmInstrument = (function (edide, mmInstrument) {Object.defineProperty(this, 'module_name', {value:'mmInstrument'});
+var cloneOrCreateInstrument, getInstruments, instruments, play, react, revar, unvar, updateVolAndTune;
+instruments = {}; // name: [instrument instances...]
+({unvar, revar, react} = edide.mmState);
+revar.bpm = () => {
+  return revar.pace;
+};
+revar.beatDelay = () => {
+  return (1 / revar.bpm) * 60 * 1000;
+};
+react(() => {});
+updateVolAndTune = (inst) => {
+  var detune, volume;
+  ({volume, detune} = unvar);
+  if ((detune != null) && (inst.detune != null)) {
+    inst.set("detune", detune);
+  }
+  if ((volume != null) && (inst.volume != null)) {
+    return inst.set("volume", volume);
+  }
+};
+react(() => {
+  var inst, insts, j, len, name;
+  revar.volume;
+  revar.detune;
+  for (name in instruments) {
+    insts = instruments[name];
+    for (j = 0, len = insts.length; j < len; j++) {
+      inst = insts[j];
+      updateVolAndTune(inst);
+    }
+  }
+});
+react('create first instrument', () => {
+  var name, ref;
+  if (!(name = (ref = revar.instrumentConf) != null ? ref.name : void 0)) { // e.g. illegal instrument name
+    return edide.showError(`Unknown instrument: ${unvar.instrument}`);
+  }
+  if (revar.pipeReady && !instruments[name]) {
+    return instruments[name] = [edide.mmInstruments.createNew()];
+  }
+});
+cloneOrCreateInstrument = (name) => {
+  var inst;
+  inst = instruments[name][0].soundFontInstrument ? (inst = edide.cloneSibling(instruments[name][0]), inst.isPlaying = false, inst) : edide.mmInstruments.createNew();
+  updateVolAndTune(inst);
+  return inst;
+};
+getInstruments = (n) => {
+  var all, free, name;
+  ({name} = unvar.instrumentConf);
+  all = instruments[name];
+  free = all.filter((i) => {
+    return !i.isPlaying;
+  });
+  edide.times(n - free.length, () => {
+    var inst;
+    free.push(inst = cloneOrCreateInstrument(name));
+    return all.push(inst);
+  });
+  return free.slice(0, n);
+};
+this.playChord = (chord, noteLength = 1) => {};
+this.playNote = (chord, noteLength = 1) => {
+  var ind, inst, insts, j, len, ref;
+  if (!Array.isArray(chord)) {
+    chord = [chord];
+  }
+  ref = insts = getInstruments(chord.length);
+  for (ind = j = 0, len = ref.length; j < len; ind = ++j) {
+    inst = ref[ind];
+    play(inst, chord[ind], noteLength);
+  }
+};
+play = async(instrument, note, length) => {
+  var err;
+  instrument.isPlaying = note; // true
+  try {
+    instrument.triggerAttackRelease(note, (length * unvar.beatDelay) / 1000);
+  } catch (error) {
+    err = error;
+    err.message = `Error in playing note ${note}, '${unvar.instrumentConf.name}' probably not loaded yet`;
+    edide.showError(err);
+  }
+  revar.note = note;
+  await edide.sleep(unvar.nextDelay);
+  return instrument.isPlaying = false;
+};
+return mmInstrument;
+}).call(MODSELF={}, edide, MODSELF);
+edide.mmPlayer = (function (edide, mmPlayer) {Object.defineProperty(this, 'module_name', {value:'mmPlayer'});
+var react, revar, unvar;
+({revar, unvar, react} = edide.mmState.init());
+this.play = (str) => {
+  revar.sheet = str;
+  return revar.playing = true;
+};
+react('play from sheet', () => {
+  if (!revar.playing) {
+    return;
+  }
+  edide.mmConfigs.init();
+  revar.preprocessing = true;
+  return edide.setTimeout(() => { // infinite revar.playing loop
+    edide.mmParser.play(unvar.sheet);
+    return revar.preprocessing = 'done';
+  });
+});
+react('play notes/chords', () => {
+  var chord, playNote, playing, preprocessing, time;
+  ({playNote, playing, preprocessing} = revar);
+  if (!(playNote && playing && preprocessing === false)) {
+    return;
+  }
+  [chord, time] = revar.playNote;
+  return edide.mmInstrument.playNote(chord, time);
+});
+this.toggle = () => {
+  return revar.playing = !unvar.playing;
+};
+revar.instrumentsLoading;
+react('play after preprocess', () => {
+  var instrumentsLoading, preprocessing;
+  ({instrumentsLoading, preprocessing} = revar);
+  if (!(preprocessing === 'done' && instrumentsLoading === 0)) {
+    return;
+  }
+  unvar.preprocessing = false;
+  return edide.mmParser.play(unvar.sheet);
+});
+return mmPlayer;
+}).call(MODSELF={}, edide, MODSELF);
+edide.mmEffects = (function (edide, mmEffects) {Object.defineProperty(this, 'module_name', {value:'mmEffects'});
+({revar: this.revar} = edide.mmState.init());
+this.maxLowpass = 10000;
+this.maxDistortion = 3;
+this.revar.lowpass = () => {
+  var blur;
+  ({blur} = this.revar);
+  return this.maxLowpass - blur * (this.maxLowpass - 200);
+};
+this.revar.distortion = () => {
+  var itch;
+  ({itch} = this.revar);
+  return this.maxDistortion * itch;
+};
+return mmEffects;
+}).call(MODSELF={}, edide, MODSELF);
+edide.objectMap = (function (edide, objectMap) {Object.defineProperty(this, 'module_name', {value:'objectMap'});
+var objectMap;
+objectMap = (obj, mapFunc) => {
+  var key, results, val;
+  results = [];
+  for (key in obj) {
+    val = obj[key];
+    results.push(mapFunc(val, key));
+  }
+  return results;
+};
+return objectMap;
+}).call(MODSELF={}, edide, MODSELF);
+edide.objEachDeep = (function (edide, objEachDeep) {
+return (rootObj, func, filter) => {
+  var dLimit, depth, hasBeenExecuted, iterator;
+  if (filter == null) {
+    filter = function() {
+      return true;
+    };
+  }
+  if (typeof filter === 'number') {
+    dLimit = filter;
+    filter = (k, v, d) => {
+      return d <= dLimit;
+    };
+  }
+  depth = 1;
+  hasBeenExecuted = new Set;
+  iterator = function(obj, parent) {
+    var key, val;
+    if (hasBeenExecuted.has(obj)) {
+      return;
+    }
+    hasBeenExecuted.add(obj);
+    for (key in obj) {
+      val = obj[key];
+      if (!(filter(key, val, depth))) {
+        continue;
+      }
+      if (typeof val === 'object') {
+        depth++;
+        iterator(val, obj);
+        depth--;
+      }
+      func(key, val, obj);
+    }
+  };
+  iterator(rootObj);
+};
+}).call(MODSELF={}, edide, MODSELF);
+edide.object = (function (edide, object) {Object.defineProperty(this, 'module_name', {value:'object'});
+var identity;
+identity = function(el) {
+  return el;
+};
+this.dellAll = function(obj) {
+  var key;
+  for (key in obj) {
+    delete obj[key];
+  }
+};
+this.filter = function(obj, filterer) {
+  var filtered, key, val;
+  filtered = {};
+  for (key in obj) {
+    val = obj[key];
+    if (filterer(key, val)) {
+      filtered[key] = val;
+    }
+  }
+  return filtered;
+};
+this.forEach = function(obj, func) {
+  var key, val;
+  for (key in obj) {
+    val = obj[key];
+    func(val, key);
+  }
+};
+this.fromArray = edide.objectFromArray;
+this.isObject = function(o) {
+  return typeof o === 'object' && !Array.isArray(o) && o !== null;
+};
+this.map = edide.objectMap;
+this.maps = function(obj, mapFuncs) {
+  var key, newObj, val;
+  if (mapFuncs.key == null) {
+    mapFuncs.key = identity;
+  }
+  if (mapFuncs.val == null) {
+    mapFuncs.val = identity;
+  }
+  newObj = {};
+  for (key in obj) {
+    val = obj[key];
+    newObj[mapFuncs.key(key, val)] = mapFuncs.val(val, key);
+  }
+  return newObj;
+};
+this.merge = (first, ...rest) => {
+  var i, key, len, obj, val;
+  for (i = 0, len = rest.length; i < len; i++) {
+    obj = rest[i];
+    for (key in obj) {
+      val = obj[key];
+      first[key] = val;
+    }
+  }
+  return first;
+};
+this.mergeWary = function(first, ...rest) {
+  var i, key, len, obj, val;
+  for (i = 0, len = rest.length; i < len; i++) {
+    obj = rest[i];
+    for (key in obj) {
+      val = obj[key];
+      if (first[key] == null) {
+        first[key] = val;
+      }
+    }
+  }
+  return first;
+};
+this.mergeDeep = function(target, source) {
+  var key, targetProp, val;
+  for (key in source) {
+    val = source[key];
+    targetProp = target[key];
+    if (this.isObject(targetProp) && this.isObject(val)) {
+      this.mergeDeep(targetProp, val);
+    } else {
+      target[key] = val;
+    }
+  }
+  return target;
+};
+this.eachDeep = edide.objEachDeep;
+this.select = function(obj, keysArr) {
+  var i, key, len, newObj;
+  newObj = {};
+  for (i = 0, len = keysArr.length; i < len; i++) {
+    key = keysArr[i];
+    newObj[key] = obj[key];
+  }
+  return newObj;
+};
+this.values = function(obj) {
+  var k, results, value;
+  results = [];
+  for (k in obj) {
+    value = obj[k];
+    results.push(value);
+  }
+  return results;
+};
+return object;
+}).call(MODSELF={}, edide, MODSELF);
+edide.mmColor = (function (edide, mmColor) {Object.defineProperty(this, 'module_name', {value:'mmColor'});
+var hueStep, noteToInd;
+noteToInd = edide.object.fromArray(edide.musicScales.full, (name, ind) => {
+  return ind;
+});
+hueStep = 360 / 12;
+this.fromNote = (note) => {
+  var hue, scaleInd;
+  scaleInd = noteToInd[note.slice(0, -1)];
+  hue = hueStep * scaleInd;
+  return `hsl(${hue}, 100%, ${edide.colorText.lightFromHue(hue)}%)`;
+};
+this.fromChar = (char, row, col) => {
+  var note, rowFirstChar;
+  if (row != null) {
+    rowFirstChar = edide.editable.getRow(row)[0];
+    if (rowFirstChar === '{' || rowFirstChar === ':') {
+      return 'white';
+    }
+  }
+  if (note = edide.mmNote.fromChar(char)) {
+    return this.fromNote(note);
+  } else if (edide.mmKeyboard.isSpecialChar(char)) {
+    return "hsl(0,100%,100%)";
+  }
+};
+return mmColor;
+}).call(MODSELF={}, edide, MODSELF);
+edide.mmDiff = (function (edide, mmDiff) {Object.defineProperty(this, 'module_name', {value:'mmDiff'});
+var prevNote, prevTime, react, revar, unvar;
+this.render = (node) => {
+  this.node = node;
+};
+this.add = (text, color) => {
+  var x, y;
+  [x, y] = unvar.highlightedPos;
+  x += 3;
+  y -= 20; // height of char
+  return edide.dom.append(this.node, {
+    'span.noteDiff': (span) => {
+      requestAnimationFrame(() => {
+        return edide.stylesInline.add(span, {
+          top: y - 50 + 'px'
+        });
+      });
+      edide.setTimeout(500, () => {
+        return edide.stylesInline.add(span, {
+          opacity: 0
+        });
+      });
+      edide.setTimeout(2000, () => {
+        return edide.dom.remove(span);
+      });
+      return {
+        text: text,
+        styles: {
+          background: color,
+          marginLeft: x + 'px',
+          top: y + 'px'
+        }
+      };
+    }
+  });
+};
+({revar, unvar, react} = edide.mmState);
+prevNote = prevTime = null;
+react("reset prevNote", () => {
+  revar.playing;
+  return prevNote = prevTime = null;
+});
+revar.diffText = () => {
+  var color, note, ref, txt;
+  note = (ref = revar.playNote) != null ? ref[0] : void 0;
+  if (!note || Array.isArray(note)) {
+    return;
+  }
+  if (prevNote && (Date.now() - prevTime) > 50) {
+    txt = edide.noteFreq.diff(prevNote, note);
+    if (txt > 0) {
+      txt = '+' + txt;
+    }
+    color = edide.mmColor.fromNote(note);
+    this.add(txt, color);
+  }
+  prevNote = note;
+  prevTime = Date.now();
+  return txt;
+};
+edide.styles.add({
+  'span.noteDiff': {
+    display: 'inline-block',
+    fontSize: '0.9em',
+    height: '1.4em',
+    opacity: 0.75,
+    borderRadius: '50%',
+    color: 'black',
+    padding: '0.15em',
+    position: 'absolute',
+    zIndex: 1,
+    bottom: 0,
+    transitionTimingFunction: 'ease-in', //'cubic-bezier(1,0,1,1)'
+    transition: '2s'
+  }
+});
+return mmDiff;
+}).call(MODSELF={}, edide, MODSELF);
+edide.mmHighlight = (function (edide, mmHighlight) {Object.defineProperty(this, 'module_name', {value:'mmHighlight'});
+var add, highlighted, react, removeAll, revar;
+highlighted = new Map; // row num => [highlighted columns]
+add = (row, from, to) => {
+  var i, j, node, ref, ref1, ref2, ref3, rowCache, style;
+  row += (ref = edide.editableState.unvar.cursorRow) != null ? ref : 0;
+  node = edide.editable.getRowNode(row);
+  (rowCache = highlighted.get(row)) || highlighted.set(row, (rowCache = []));
+  for (i = j = ref1 = from, ref2 = to; (ref1 <= ref2 ? j <= ref2 : j >= ref2); i = ref1 <= ref2 ? ++j : --j) {
+    if (!(node != null ? (ref3 = node.childNodes[i]) != null ? ref3.style : void 0 : void 0)) {
+      continue;
+    }
+    ({style} = node.childNodes[i]);
+    style.background = style.color;
+    style.color = 'black';
+    rowCache[i] = true;
+  }
+};
+removeAll = () => {
+  highlighted.forEach((columns, rowInd) => {
+    var childNode, column, highl, j, len, node, style;
+    node = edide.editable.getRowNode(rowInd);
+    for (column = j = 0, len = columns.length; j < len; column = ++j) {
+      highl = columns[column];
+      if (!(highl)) {
+        continue;
+      }
+      ({style} = childNode = node.childNodes[column]);
+      revar.highlightedPos = [childNode.offsetLeft, node.offsetTop];
+      style.color = style.background;
+      style.background = null;
+    }
+  });
+  return highlighted = new Map;
+};
+({react, revar} = edide.mmState);
+react(() => {
+  if (revar.highlight) {
+    return add(...revar.highlight);
+  } else {
+    return removeAll();
+  }
+});
+react("remove highlight on stop", () => {
+  if (revar.playing) {
+    return;
+  }
+  return removeAll();
+});
+return mmHighlight;
+}).call(MODSELF={}, edide, MODSELF);
+edide.string = (function (edide, string) {Object.defineProperty(this, 'module_name', {value:'string'});
+this.removeTrailingSpaces = function(str) {
+  return str.split('\n').map(function(s) {
+    return s.replace(/ +$/, '');
+  }).join('\n');
+};
+this.nthCharInd = (str, char, nth) => {
+  var chr, i, ind, len;
+  for (ind = i = 0, len = str.length; i < len; ind = ++i) {
+    chr = str[ind];
+    if (chr === char) {
+      if (--nth === 0) {
+        return ind;
+      }
+    }
+  }
+  return false;
+};
+this.insert = (full, ind, insert) => {
+  return full.slice(0, ind) + insert + full.slice(ind);
+};
+return string;
+}).call(MODSELF={}, edide, MODSELF);
+edide.mmEditable = (function (edide, mmEditable) {Object.defineProperty(this, 'module_name', {value:'mmEditable'});
+var configs, react, revar, unvar;
+edide.mmHighlight;
+edide.editableDebug.isOn = false;
+configs = {
+  letterColor: edide.mmColor.fromChar
+};
+this.renderTo = (node) => {
+  var sheet;
+  this.node = edide.editable.renderTo(node, configs);
+  sheet = edide.mmState.unvar.sheet = edide.mmState.unvar.fullSheet;
+  edide.editable.setValue(sheet);
+  return this.node;
+};
+({revar, unvar, react} = edide.editableState);
+react("stop playing on key press", () => {
+  revar.keyPressEv;
+  return edide.mmState.revar.playing = false;
+});
+react("play new note on key press", () => {
+  var note, ref;
+  if (note = edide.mmNote.fromKeyCode((ref = revar.keyPressEv) != null ? ref.charCode : void 0)) {
+    return edide.mmInstrument.playNote(note);
+  }
+});
+react("update sheet on editable input", () => {
+  var cursorRow, full, keyCode;
+  ({keyCode, cursorRow} = revar);
+  if (!(full = edide.editable.getValue())) {
+    return;
+  }
+  edide.mmState.revar.fullSheet = full;
+  return edide.mmState.revar.sheet = cursorRow ? full.slice((edide.string.nthCharInd(full, '\n', cursorRow)) + 1) : full;
+});
+react("stop playing on mouse click", () => {
+  if (revar.mouseDown && edide.mmState.unvar.playing) {
+    return edide.mmState.revar.playing = false;
+  }
+});
+react("refresh colors on scale change", () => {
+  var val;
+  if (!(edide.mmState.revar.scaleSteps && edide.mmState.revar.instrument)) {
+    return;
+  }
+  if (val = edide.editable.getValue()) {
+    edide.editable.setValue(val);
+  }
+});
+return mmEditable;
+}).call(MODSELF={}, edide, MODSELF);
+edide.toneRecord = (function (edide, toneRecord) {Object.defineProperty(this, 'module_name', {value:'toneRecord'});
+var blob, chunks, initRecorder, react, recordTime, recorder, refreshInput, revar, start, startTime, stop, unvar;
+recorder = blob = null;
+chunks = [];
+({revar, unvar, react} = edide.mmState);
+react('stop play when recorder turned on/off', () => {
+  revar.recorderOn;
+  return revar.playing = false;
+});
+edide.styles.add(this, {
+  '.recorder': {
+    textAlign: 'right',
+    input: {
+      marginLeft: '0.7em'
+    }
+  },
+  'audio.recorder': {
+    width: '100%'
+  }
+});
+this.onoff = {
+  'div.recorder': {
+    span: edide.rdom(() => {
+      if (revar.recordingURL != null) {
+        return {
+          a: {
+            text: `record (${Math.round(recordTime)} sec)`,
+            href: revar.recordingURL,
+            target: '_blank'
+          }
+        };
+      } else {
+        return 'recorder';
+      }
+    }),
+    input: {
+      type: 'checkbox',
+      checked: revar.recorderOn ? '' : null,
+      styles: {
+        textAlign: 'right'
+      },
+      onInput: (ev) => {
+        return revar.recorderOn = ev.target.checked;
+      }
+    }
+  }
+};
+refreshInput = () => {
+  var ref;
+  if (this.stream) {
+    return (ref = edide.mmPipe.output) != null ? ref.connect(this.stream) : void 0;
+  }
+};
+react('record input', () => {
+  revar.instrumentConf;
+  return refreshInput();
+});
+this.render = (audioDOM) => {
+  this.audioDOM = audioDOM;
+  this.stream = Tone.context.createMediaStreamDestination();
+  edide.unload.add(() => {
+    this.stream.disconnect();
+    this.stream = null;
+    return edide.dom.remove(this.audioDOM);
+  });
+  refreshInput();
+  initRecorder();
+  return {
+    Controls: {},
+    Style: edide.rdom(() => {
+      return edide.stylesInline.fromObj({
+        transform: 'scale(0.8)',
+        textAlign: 'right',
+        display: revar.recorderOn ? 'block' : 'none'
+      });
+    })
+  };
+};
+initRecorder = () => {
+  recorder = new MediaRecorder(this.stream.stream);
+  recorder.ondataavailable = (ev) => {
+    return chunks.push(ev.data);
+  };
+  return recorder.onstop = (ev) => {
+    blob = new Blob(chunks, {
+      type: "audio/ogg; codecs=opus"
+    });
+    this.audioDOM.src = revar.recordingURL = URL.createObjectURL(blob);
+    return chunks.length = 0;
+  };
+};
+react('start / stop recorder', () => {
+  if (revar.playing) {
+    return start();
+  } else {
+    return edide.setTimeout(unvar.nextDelay + 800, stop);
+  }
+});
+startTime = recordTime = null;
+start = () => {
+  if (!revar.recorderOn) {
+    return;
+  }
+  startTime = Date.now();
+  stop(); // timeout can cause error otherwise
+  return recorder.start();
+};
+stop = () => {
+  if (!recorder || recorder.state === 'inactive') {
+    return;
+  }
+  recordTime = (Date.now() - startTime) / 1000;
+  return recorder.stop();
+};
+return toneRecord;
+}).call(MODSELF={}, edide, MODSELF);
+edide.mmPrintNotes = (function (edide, mmPrintNotes) {
+var a, noteKeyCodes, one, ref, revar, unvar, zero;
+a = 'a'.charCodeAt(0);
+one = '1'.charCodeAt(0);
+zero = '0'.charCodeAt(0);
+noteKeyCodes = (function() {
+  var results = [];
+  for (var i = a, ref = a + 25; a <= ref ? i <= ref : i >= ref; a <= ref ? i++ : i--){ results.push(i); }
+  return results;
+}).apply(this);
+({revar, unvar} = edide.mmState);
+return () => {
+  var i, keyCode, keysFromNote, len, note, printNote, results, root;
+  ({note, root} = revar);
+  if (!unvar.instrumentConf) { // e.g. illegal instrument
+    return;
+  }
+  keysFromNote = [];
+  results = [];
+  for (i = 0, len = noteKeyCodes.length; i < len; i++) {
+    keyCode = noteKeyCodes[i];
+    printNote = edide.mmNote.fromKeyCode(keyCode);
+    results.push({
+      div: {
+        text: `${String.fromCharCode(keyCode)}: ${printNote} `,
+        styles: {
+          marginRight: 10,
+          color: edide.mmColor.fromChar(String.fromCharCode(keyCode)),
+          fontWeight: note === printNote ? 'bold' : 'normal'
+        }
+      }
+    });
+  }
+  return results;
+};
+}).call(MODSELF={}, edide, MODSELF);
+edide.ariSheet = (function (edide, ariSheet) {Object.defineProperty(this, 'module_name', {value:'ariSheet'});
+var height, lib, notes, width;
+lib = "https://unpkg.com/vexflow@1.2.87/releases/vexflow-debug.js";
+width = 120;
+height = 150;
+this.init = (node) => {
+  this.node = node;
+  if (this.system) {
+    return;
+  }
+  edide.requireScript(lib);
+  return this.node;
+};
+notes = {};
+this.drawNote = (note) => {
+  var score, stave, vf;
+  if (!((edide.global.Vex != null) && (this.node != null))) {
+    return;
+  }
+  edide.dom.removeChildren(this.node);
+  if (notes[note]) {
+    return this.node.appendChild(notes[note].context.svg);
+  }
+  edide.stylesInline.set(this.node, { // SLOW
+    display: 'inline-block',
+    width: width,
+    height: height,
+    background: "hsl(0,0%,80%)"
+  });
+  vf = new Vex.Flow.Factory({
+    renderer: {
+      elementId: this.node.id,
+      width: width - 10,
+      height
+    }
+  });
+  this.system = vf.System();
+  score = vf.EasyScore();
+  stave = this.system.addStave({
+    voices: [score.voice(score.notes(`${note
+}/1`))]
+  }).addClef('treble'); //.addTimeSignature('1/1')
+  vf.draw();
+  return notes[note] = vf;
+};
+return ariSheet;
+}).call(MODSELF={}, edide, MODSELF);
+edide.inProduction = (function (edide, inProduction) {
+return !edide.inEditor;
+}).call(MODSELF={}, edide, MODSELF);
+edide.musicmakers = (function (edide, musicmakers) {Object.defineProperty(this, 'module_name', {value:'musicmakers'});
+var react, revar, unvar;
+edide.mmStateWithStorage;
+edide.mmMeta.init();
+edide.mmPlayer;
+edide.mmEffects;
+({revar, unvar, react} = edide.mmState.init());
+this.init = async() => {
+  var inf;
+  await edide.mmInstruments.initInstrument();
+  edide.render.toLayer(this, {
+    '.legend': (function() {
+      var i, len, ref, results;
+      ref = ['a-z notes', '. pause', 'long==', '[chords]', ':variables:', '{configs}', '# comment'];
+      results = [];
+      for (i = 0, len = ref.length; i < len; i++) {
+        inf = ref[i];
+        results.push({
+          span: inf
+        });
+      }
+      return results;
+    })(),
+    '.diff': edide.mmDiff.render,
+    div: edide.mmEditable.renderTo,
+    '.buttons': edide.toneRecord.onoff,
+    'audio.recorder': edide.toneRecord.render, // NOTE: audio element is not properly garbage collected (at leat in chrome)
+    '.info': {
+      '.notes': edide.rdom(edide.mmPrintNotes),
+      '#notesheet': edide.ariSheet.init
+    }
+  });
+  return react('draw note', () => {
+    if (typeof revar.note === 'string') {
+      return edide.ariSheet.drawNote(revar.note);
+    }
+  });
+};
+edide.styles.addRoot({
+  background: edide.inProduction ? 'gray' : void 0,
+  '#layers': {
+    maxWidth: 500,
+    margin: '0 auto'
+  }
+});
+edide.styles.addScoped(this, {
+  a: {
+    color: edide.editor_colors.green
+  },
+  padding: '2em',
+  '.reactiveRange, .diff, #notesheet': {
+    marginTop: '0.7em'
+  },
+  '.instrument': {
+    marginTop: '1em'
+  },
+  '.legend span': {
+    marginRight: '1em',
+    fontSize: '0.7em',
+    color: 'gray'
+  },
+  '.notes': {
+    columnWidth: '4em'
+  },
+  textarea: {
+    fontFamily: 'Inconsolata, Courier',
+    fontSize: '1.0em',
+    width: '100%',
+    height: 150,
+    marginTop: '0.2em'
+  },
+  '.info': {
+    marginTop: '0.8em'
+  }
+});
+if (edide.inProduction) {
+  this.init();
+}
+return musicmakers;
+}).call(MODSELF={}, edide, MODSELF);
