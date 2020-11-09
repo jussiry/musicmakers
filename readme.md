@@ -28,13 +28,17 @@ z==x==c==*3 z==x==
 
 #### Variables
 ```
-:guitar: asdfg..
+:guitar:
+asdfg..
 
-:pace 200: asdfg..
+:scale minor:
+asdfg..
 
-:scale minor: asdfg..
+:pace 700:
+asdfg..
 
-:itch 0.4: asdfg..
+:itch 0.4:
+asdfg..
 ```
 
 #### Puff the magic dragon
