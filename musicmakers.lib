@@ -401,6 +401,7 @@ this.defaults = {
   diffText: '',
   note: null, // currently playing note
   pace: 400, // -> bpm -> beatDelay
+  bpm: 400, // deprecate
   balance: 0,
   blur: 0,
   itch: 0,
@@ -500,7 +501,7 @@ var previous, ref, storeProps, storeState;
 this.lsKey = 'musicmakersState';
 previous = JSON.parse((ref = localStorage.getItem(this.lsKey)) != null ? ref : '{}');
 edide.mmState.init(previous);
-storeProps = edide.set('bpm', 'distortion', 'lowpass', 'fullSheet', 'scale', 'root', 'instrument', 'keyboardInd');
+storeProps = edide.set('bpm', 'pace', 'distortion', 'lowpass', 'fullSheet', 'scale', 'root', 'instrument', 'keyboardInd');
 storeState = () => {
   var state;
   state = {};
@@ -2927,7 +2928,7 @@ mmMeta.init = async() => {
     }
   };
   react("Refresh 'insert configs' button", refreshRoot = () => {
-    configsRoot.name = `:bpm ${revar.bpm}: \:instrument ${revar.instrument}:`;
+    configsRoot.name = `:pace ${revar.pace}: \:instrument ${revar.instrument}:`;
     return edide.meta.edit(configsRoot);
   });
   refreshRoot;
@@ -2955,10 +2956,10 @@ mmMeta.init = async() => {
     return edide.meta.edit(PlayPause);
   });
   refreshPlayPause();
-  speed = edide.mmPointerSlider.init('bpm', 900, 60, 0);
+  speed = edide.mmPointerSlider.init('pace', 900, 60, 0);
   edide.meta.edit({
-    name: "speed (BPM)", //  #{revar.bpm}
-    combo: ['B'],
+    name: "pAce", //  #{revar.bpm}
+    combo: ['A'],
     on: speed.start,
     up: speed.end //=> stopModifying()
   });
@@ -3103,7 +3104,9 @@ this.activate = (conf) => {
   return Object.assign(edide.mmState.revar, conf);
 };
 this.reset = () => {
-  return edide.assign(edide.mmState.revar, edide.mmState.defaults);
+  stateVars.forEach((name) => {
+    return edide.mmState.revar[name] = edide.mmState.defaults[name];
+  });
 };
 this.addVar = (varName, config) => { // , activate=true
   if (mutatingProp(config)) {
@@ -3658,6 +3661,7 @@ react('play after preprocess', () => {
     return;
   }
   unvar.preprocessing = false;
+  edide.mmConfigs.reset();
   return edide.mmParser.play(unvar.sheet);
 });
 return mmPlayer;
