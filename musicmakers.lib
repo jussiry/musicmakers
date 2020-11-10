@@ -402,7 +402,10 @@ this.defaults = {
   note: null, // currently playing note
   pace: 400, // -> bpm -> beatDelay
   bpm: 400, // deprecate
+  beatDelay: (1 / 400) * 60 * 1000, // silly! unify with pace as one statestate variable
   balance: 0,
+  volume: 0,
+  detune: 0,
   blur: 0,
   itch: 0,
   instrumentsLoading: 0,
@@ -3067,7 +3070,7 @@ edide.mmConfigs = (function (edide, mmConfigs) {Object.defineProperty(this, 'mod
 var defaultVars, mutatingProp, mutatingVars, stateVars, vars;
 vars = {}; // varName: config object
 mutatingVars = {};
-stateVars = edide.set('itch', 'blur', 'instrument', 'bpm', 'pace', 'scale', 'root', 'balance');
+stateVars = edide.set('itch', 'blur', 'instrument', 'bpm', 'pace', 'beatDelay', 'scale', 'root', 'balance', 'detune', 'volume');
 this.hasVar = (varName) => {
   var ref, ref1;
   return !!((ref = (ref1 = vars[varName]) != null ? ref1 : mutatingVars[varName]) != null ? ref : stateVars.has(varName));
